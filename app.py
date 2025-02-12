@@ -5,7 +5,7 @@ import io
 import subprocess
 from contextlib import redirect_stdout
 
-# Function to list all Python and JSON files in the working directory
+# Function to list all Python, JSON, and TEAL files in the directory (excluding app.py)
 def list_files():
     return [f for f in os.listdir() if f != "app.py" and (f.endswith(".py") or f.endswith(".json") or f.endswith(".teal"))]
 
@@ -14,6 +14,11 @@ def create_file(file_name):
     if file_name and not os.path.exists(file_name):
         with open(file_name, "w") as f:
             f.write("")  # Create an empty file
+
+# Function to delete a file
+def delete_file(file_name):
+    if os.path.exists(file_name):
+        os.remove(file_name)
 
 # Function to read file content
 def read_file(file_path):
@@ -84,10 +89,21 @@ if st.session_state.show_create_file:
 files = list_files()
 
 for file in files:
-    if st.sidebar.button(file, key=file):
-        if file not in st.session_state.open_files:
-            st.session_state.open_files[file] = read_file(file)
-        st.session_state.active_file = file  # Set active file
+    col1, col2 = st.sidebar.columns([3, 1])  # Sidebar layout for file listing & delete button
+    with col1:
+        if st.button(file, key=f"open_{file}"):
+            if file not in st.session_state.open_files:
+                st.session_state.open_files[file] = read_file(file)
+            st.session_state.active_file = file  # Set active file
+    with col2:
+        if st.button("🗑️", key=f"delete_{file}"):  # Delete button
+            delete_file(file)
+            if file in st.session_state.open_files:
+                del st.session_state.open_files[file]
+            if st.session_state.active_file == file:
+                st.session_state.active_file = None
+            st.success(f"Deleted {file}")
+            st.rerun()  # Refresh file list after deletion
 
 # Display open files as tabs with close buttons
 if st.session_state.open_files:
