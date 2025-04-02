@@ -2,14 +2,14 @@ import streamlit as st
 from streamlit_ace import st_ace
 import os
 import io
-import subprocess
 from contextlib import redirect_stdout
+import requests
 
-# Function to list all Python, JSON, and TEAL files in the directory (excluding app.py)
+# Function to list all Python files in the directory (excluding app.py & deploy.py)
 def list_files():
-    return [f for f in os.listdir() if f != "app.py" and (f.endswith(".py") or f.endswith(".json") or f.endswith(".teal"))]
+    return [f for f in os.listdir() if f != "app.py" and f != "deploy.py" and f!= "server.py" and f.endswith(".py")]
 
-# Function to create a new file in the working directory
+# Function to create a new file
 def create_file(file_name):
     if file_name and not os.path.exists(file_name):
         with open(file_name, "w") as f:
@@ -40,13 +40,13 @@ def run_code(code):
     except Exception as e:
         return str(e)
 
-# Function to compile using algokit
-def compile_code(file_path):
-    try:
-        result = subprocess.run(["algokit", "compile", "py", file_path], capture_output=True, text=True)
-        return result.stdout if result.returncode == 0 else result.stderr
-    except Exception as e:
-        return str(e)
+# Function to compile using algokit and deploy the compiled contract
+def deploy_code(file_path):
+    response = requests.post("http://127.0.0.1:9999/deploy", json={"file_path": file_path})
+    if response.status_code == 200:
+        return response.json().get("deploy_result", "Deployment completed")
+    else:
+        return response.json().get("error", "Deployment failed")
 
 # Initialize session state
 if "open_files" not in st.session_state:
@@ -61,12 +61,12 @@ if "show_create_file" not in st.session_state:
 if "output" not in st.session_state:
     st.session_state.output = ""
 
-if "compile_output" not in st.session_state:
-    st.session_state.compile_output = ""
+if "deploy_output" not in st.session_state:
+    st.session_state.deploy_output = ""
 
 # Streamlit UI
 st.set_page_config(layout="wide")
-st.title("Algorand Python Compiler")
+st.title("Algorand Python Deployment")
 
 # Sidebar - File Explorer & Create File Section
 st.sidebar.header("Files in Directory")
@@ -133,7 +133,7 @@ if st.session_state.open_files:
         if edited_code != st.session_state.open_files[st.session_state.active_file]:
             st.session_state.open_files[st.session_state.active_file] = edited_code
 
-        # Buttons for Save, Run, and Compile
+        # Buttons for Save, Run, and Deploy
         col1, col2, col3 = st.columns(3)
         
         with col1:
@@ -146,9 +146,9 @@ if st.session_state.open_files:
                 st.session_state.output = run_code(st.session_state.open_files[st.session_state.active_file])
 
         with col3:
-            if st.button("Compile"):
-                st.session_state.compile_output = compile_code(st.session_state.active_file)
+            if st.button("Deploy"):
+                st.session_state.deploy_output = deploy_code(st.session_state.active_file)
 
         # Output Section - Terminal Output
         st.subheader("Terminal Output:")
-        st.text_area("Output", st.session_state.output or st.session_state.compile_output, height=250)
+        st.text_area("Output", st.session_state.output or st.session_state.deploy_output, height=250)
