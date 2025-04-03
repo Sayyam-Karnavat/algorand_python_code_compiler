@@ -1,2 +1,4 @@
 .venv
 code_files/
+*.png
+code-editor/node_modules
