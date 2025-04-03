@@ -5,6 +5,7 @@ import io
 from contextlib import redirect_stdout
 import requests
 
+
 # Function to list all Python files in the directory (excluding app.py & deploy.py)
 def list_files():
     return [f for f in os.listdir() if f != "app.py" and f != "deploy.py" and f!= "server.py" and f.endswith(".py")]
