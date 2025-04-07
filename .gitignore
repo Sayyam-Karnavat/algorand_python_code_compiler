@@ -2,3 +2,4 @@
 code_files/
 *.png
 code-editor/node_modules
+server.py
