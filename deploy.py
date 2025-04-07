@@ -11,17 +11,8 @@ from algokit_utils import account as util_account
 def fund_account(wallet_address:str , algod_client : algod.AlgodClient):
 
     try:
-        
-        # master_mnemonic = "toss transfer sure frozen real jungle mouse inch smoke derive floor alter ten eagle narrow perfect soap weapon payment chaos amateur height estate absent cabbage"
-        # master_account = util_account.get_account_from_mnemonic(mnemonic=master_mnemonic)
-        
-        # master_wallet , master_private_key = master_account.address ,master_account.private_key
-
         master_account = util_account.get_localnet_default_account(client=algod_client)
         master_wallet , master_private_key = master_account.address , master_account.private_key
-
-
-
         params = algod_client.suggested_params()
         payment_txn = transaction.PaymentTxn(
             sender=master_wallet,
