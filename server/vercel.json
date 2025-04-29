@@ -1,19 +1,15 @@
 {
     "version": 2,
-    "buildCommand": "pip install pipx && export PATH=\"$PATH:$HOME/.local/bin\" && pipx install algokit",
     "builds": [
-        {
-            "src": "index.py",
-            "use": "@vercel/python",
-            "config": {
-                "pythonVersion": "3.12"
-            }
-        }
+      {
+        "src": "Dockerfile",
+        "use": "@vercel/docker"
+      }
     ],
     "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "index.py"
-        }
+      {
+        "src": "/(.*)",
+        "dest": "/"
+      }
     ]
-}
+  }
