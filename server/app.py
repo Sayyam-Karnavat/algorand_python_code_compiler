@@ -60,6 +60,12 @@ def run_code():
         return jsonify({"error": traceback.format_exc()}), 500
     
 
+@app.route("/")
+def hompage():
+    return "Server Running !!!"
+
+
+
 @app.route("/debug")
 def debug():
     
@@ -89,6 +95,3 @@ def debug():
 
 
 
-@app.route("/")
-def hompage():
-    return "Server Running !!!"

@@ -1,25 +1,18 @@
 {
     "version": 2,
     "builds": [
-      {
-        "src": "Dockerfile",
-        "use": "@vercel/docker"
-      }
+        {
+            "src": "index.py",
+            "use": "@vercel/python",
+            "config": {
+                "pythonVersion": "3.12"
+            }
+        }
     ],
     "routes": [
-      { 
-        "src": "/deploy", 
-        "dest": "/deploy",
-        "methods": ["POST"]
-      },
-      { 
-        "src": "/run", 
-        "dest": "/run",
-        "methods": ["POST"]
-      },
-      {
-        "src": "/(.*)",
-        "dest": "/"
-      }
+        {
+            "src": "/(.*)",
+            "dest": "index.py"
+        }
     ]
-  }
+}
