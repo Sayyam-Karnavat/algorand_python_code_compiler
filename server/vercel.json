@@ -1,11 +1,11 @@
 {
     "version": 2,
+    "buildCommand": "pip install pipx && export PATH=\"$PATH:$HOME/.local/bin\" && pipx install algokit",
     "builds": [
         {
             "src": "index.py",
             "use": "@vercel/python",
             "config": {
-                "buildCommand": "./install_algokit.sh && pip install -r requirements.txt",
                 "pythonVersion": "3.12"
             }
         }

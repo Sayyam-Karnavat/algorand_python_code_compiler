@@ -3,15 +3,19 @@ import os
 from dotenv import load_dotenv
 from algosdk import account , mnemonic
 import algokit_utils
-from algokit_utils import OnUpdate, OnSchemaBreak , AlgorandClient , PaymentParams , AlgoAmount , SigningAccount
-from pathlib import Path
+from algokit_utils import OnUpdate, OnSchemaBreak  , PaymentParams , AlgoAmount 
 import re
 import subprocess
 import json
 import shutil
 import tempfile
 
+
+
 load_dotenv()
+
+os.environ["PATH"] = f"{os.environ.get('PATH')}:{os.path.expanduser('~/.local/bin')}"
+
 
 
 def fund(address):
