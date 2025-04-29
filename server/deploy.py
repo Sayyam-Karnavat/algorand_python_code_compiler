@@ -133,13 +133,12 @@ def deploy_app(smart_contract_code):
 
         private_key , address = account.generate_account()
         user_mnemomic = mnemonic.from_private_key(private_key)
-        print("Account created")
         
 
         algorand = algokit_utils.AlgorandClient.testnet()
         deployer = algorand.account.from_mnemonic(mnemonic=user_mnemomic)
 
-        print("Algorand client created")
+        
         # Algokit testnet dispenser limit exceeded
         # fund_response = fund(address=address)
 
@@ -147,7 +146,7 @@ def deploy_app(smart_contract_code):
         # Hence funding from private account
         private_fund_response=fund_from_private_Account(receiver_address=address)
 
-        print("Account funded !!!")
+        
 
 
         
@@ -159,7 +158,7 @@ def deploy_app(smart_contract_code):
 
         compile_response = compile(smart_contract_code=smart_contract_code)
 
-        print("Contract compiled")
+        
 
         if compile_response['success'] == True and compile_response['json_content']:
 
@@ -168,7 +167,7 @@ def deploy_app(smart_contract_code):
         else:
             return compile_response
         
-        print("App spec created")
+        
         factory = algorand.client.get_app_factory(
         
         app_spec=app_spec,
@@ -176,18 +175,19 @@ def deploy_app(smart_contract_code):
         )
 
 
-        print("App factory created")
+        
 
 
         # Deploy the application
         app_client, deploy_response = factory.deploy(
             on_update=OnUpdate.AppendApp, # Create a new app if updating
             on_schema_break=OnSchemaBreak.AppendApp, # Create a new app if schema breaks
-            # compilation_params={
-            # "deploy_time_params": {"VERSION": 1}, # Optional template parameters
-            # },
+            compilation_params={
+            "deploy_time_params": {"VERSION": 1}, # Optional template parameters
+            },
         )
 
+        
         
         algorand.send.payment(
             algokit_utils.PaymentParams(
@@ -196,6 +196,7 @@ def deploy_app(smart_contract_code):
             receiver=app_client.app_address,
             )
         )
+
 
 
 
@@ -208,17 +209,4 @@ def deploy_app(smart_contract_code):
         return {
             "error" : str(e)
         }
-
-
-
-if __name__ == "__main__":
-    private_key , address = account.generate_account()
-    user_mnemomic = mnemonic.from_private_key(private_key)
-    
-    with open("contract.py" , "r") as f:
-        contract_code = f.read()
-
-
-    print(deploy_app(smart_contract_code=contract_code))
-
 
