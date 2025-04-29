@@ -35,7 +35,7 @@ def fund(address):
 def fund_from_private_Account(receiver_address):
     try:
 
-        algorand_client = AlgorandClient.testnet()
+        algorand_client = algokit_utils.AlgorandClient.testnet()
 
         master_mnemonic = os.getenv("DEPLOYER")
 
@@ -45,7 +45,7 @@ def fund_from_private_Account(receiver_address):
             PaymentParams(
                 sender=master_account.address,
                 receiver=receiver_address,
-                amount=AlgoAmount(algo=1),  # Sending 1 Algo
+                amount=AlgoAmount(algo=2),  # Sending 1 Algo
                 signer=master_account.signer,
                 note=b"Payment transaction example"  # Optional note
             )
@@ -95,7 +95,7 @@ def compile(smart_contract_code):
             capture_output=True,
             text=True
         )
-
+        
         # Check for command failure
         if result.returncode != 0:
             return {
@@ -133,17 +133,22 @@ def deploy_app(smart_contract_code):
 
         private_key , address = account.generate_account()
         user_mnemomic = mnemonic.from_private_key(private_key)
+        print("Account created")
         
 
         algorand = algokit_utils.AlgorandClient.testnet()
         deployer = algorand.account.from_mnemonic(mnemonic=user_mnemomic)
 
+        print("Algorand client created")
         # Algokit testnet dispenser limit exceeded
         # fund_response = fund(address=address)
 
 
         # Hence funding from private account
         private_fund_response=fund_from_private_Account(receiver_address=address)
+
+        print("Account funded !!!")
+
 
         
         if private_fund_response != True:
@@ -154,6 +159,8 @@ def deploy_app(smart_contract_code):
 
         compile_response = compile(smart_contract_code=smart_contract_code)
 
+        print("Contract compiled")
+
         if compile_response['success'] == True and compile_response['json_content']:
 
             app_spec = compile_response['json_content']
@@ -161,11 +168,16 @@ def deploy_app(smart_contract_code):
         else:
             return compile_response
         
+        print("App spec created")
         factory = algorand.client.get_app_factory(
         
         app_spec=app_spec,
             default_sender=deployer.address
         )
+
+
+        print("App factory created")
+
 
         # Deploy the application
         app_client, deploy_response = factory.deploy(
@@ -176,14 +188,16 @@ def deploy_app(smart_contract_code):
             # },
         )
 
-        if deploy_response.operation_performed in [algokit_utils.OperationPerformed.Create,algokit_utils.OperationPerformed.Replace,]:
-            algorand.send.payment(
-                algokit_utils.PaymentParams(
-                amount=algokit_utils.AlgoAmount(algo=1),
-                sender=deployer.address,
-                receiver=app_client.app_address,
-                )
+        
+        algorand.send.payment(
+            algokit_utils.PaymentParams(
+            amount=algokit_utils.AlgoAmount(algo=1),
+            sender=deployer.address,
+            receiver=app_client.app_address,
             )
+        )
+
+
 
         return {
             "private_key" : private_key,
@@ -201,4 +215,10 @@ if __name__ == "__main__":
     private_key , address = account.generate_account()
     user_mnemomic = mnemonic.from_private_key(private_key)
     
-    fund_from_private_Account(receiver_address=address)
+    with open("contract.py" , "r") as f:
+        contract_code = f.read()
+
+
+    print(deploy_app(smart_contract_code=contract_code))
+
+
