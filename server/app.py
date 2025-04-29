@@ -37,7 +37,8 @@ def deploy_code():
         # Deploy the compiled contract
         deploy_result = deploy_app(smart_contract_code=code)
 
-        return jsonify({"deploy_result": deploy_result})
+        
+        return jsonify({"message":"Deployment successful", "deploy_result": deploy_result}) , 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
