@@ -196,10 +196,6 @@ def deploy_app(smart_contract_code):
             receiver=app_client.app_address,
             )
         )
-
-
-
-
         return {
             "private_key" : private_key,
             "wallet_address" : address,
