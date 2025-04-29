@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from algosdk import account , mnemonic
 import algokit_utils
-from algokit_utils import OnUpdate, OnSchemaBreak
+from algokit_utils import OnUpdate, OnSchemaBreak , AlgorandClient , PaymentParams , AlgoAmount , SigningAccount
 from pathlib import Path
 import re
 import subprocess
@@ -16,7 +16,6 @@ load_dotenv()
 
 def fund(address):
     try:
-
         algorand = algokit_utils.AlgorandClient.testnet()
         dispenser = algorand.client.get_testnet_dispenser(auth_token=os.getenv("DISPENSER_TOKEN"))
         dispenser.fund(address=address , amount=1_000_000)
@@ -27,9 +26,35 @@ def fund(address):
             min_spending_balance=algokit_utils.AlgoAmount(algo=1)
         )
         return True
-    except:
-        return False
+    except Exception as e :
+        return {
+            "error" : str(e)
+        }
     
+
+def fund_from_private_Account(receiver_address):
+    try:
+
+        algorand_client = AlgorandClient.testnet()
+
+        master_mnemonic = os.getenv("DEPLOYER")
+
+        master_account = algorand_client.account.from_mnemonic(mnemonic=master_mnemonic)
+
+        result = algorand_client.send.payment(
+            PaymentParams(
+                sender=master_account.address,
+                receiver=receiver_address,
+                amount=AlgoAmount(algo=1),  # Sending 1 Algo
+                signer=master_account.signer,
+                note=b"Payment transaction example"  # Optional note
+            )
+        )
+        return True
+    except Exception as e :
+        return {
+            "error" : str(e)
+        }
 
 
 
@@ -52,56 +77,54 @@ def compile(smart_contract_code):
         # Create a temporary directory in /tmp (safe for Vercel)
         temp_dir = tempfile.mkdtemp(dir='/tmp' if os.path.exists('/tmp') else None)
 
-        try:
-            # Write the smart contract code to a temporary .py file
-            temp_file_path = os.path.join(temp_dir, f"{contract_name}.py")
-            with open(temp_file_path, "w") as f:
-                f.write(smart_contract_code)
+        
+        # Write the smart contract code to a temporary .py file
+        temp_file_path = os.path.join(temp_dir, f"{contract_name}.py")
+        with open(temp_file_path, "w") as f:
+            f.write(smart_contract_code)
 
-            # Expected output JSON file path
-            json_file_path = os.path.join(temp_dir, f"{contract_name}.arc56.json")
+        # Expected output JSON file path
+        json_file_path = os.path.join(temp_dir, f"{contract_name}.arc56.json")
 
-            # Compile the contract with algokit
-            command = [
-                "algokit", "compile", "python", temp_file_path, "--output-arc56", "--no-output-teal", "--out-dir", temp_dir
-            ]
-            result = subprocess.run(
-                command,
-                capture_output=True,
-                text=True
-            )
+        # Compile the contract with algokit
+        command = [
+            "algokit", "compile", "python", temp_file_path, "--output-arc56", "--no-output-teal", "--out-dir", temp_dir
+        ]
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True
+        )
 
-            # Check for command failure
-            if result.returncode != 0:
-                return {
-                    "error": f"Compilation failed: {result.stderr}",
-                    "stdout": result.stdout
-                }
-
-            # Check if the JSON file was created
-            if not os.path.exists(json_file_path):
-                return {
-                    "error": f"Compiled JSON file not found. Check if algokit generated the output.",
-                    "stdout": result.stdout,
-                    "stderr": result.stderr
-                }
-
-            # Read the JSON content
-            with open(json_file_path, "r") as f:
-                json_content = json.load(fp=f)
-
-            # Return the JSON content
+        # Check for command failure
+        if result.returncode != 0:
             return {
-                "success": True,
-                "json_content": json_content
+                "error": f"Compilation failed: {result.stderr}",
+                "stdout": result.stdout
             }
 
-        finally:
-            # Clean up: Remove the temporary directory and all its contents
-            shutil.rmtree(temp_dir, ignore_errors=True)
+        # Check if the JSON file was created
+        if not os.path.exists(json_file_path):
+            return {
+                "error": f"Compiled JSON file not found. Check if algokit generated the output.",
+                "stdout": result.stdout,
+                "stderr": result.stderr
+            }
 
+        # Read the JSON content
+        with open(json_file_path, "r") as f:
+            json_content = json.load(fp=f)
+
+        # Return the JSON content
+        return {
+            "success": True,
+            "json_content": json_content
+        }
+        # Clean up: Remove the temporary directory and all its contents
+        shutil.rmtree(temp_dir, ignore_errors=True)
+    
     except Exception as e:
-        return {"success": False , "json_content" : {}}
+        return {"success": False , "json_content" : {} , "error" : str(e)}
     
 
 
@@ -115,7 +138,18 @@ def deploy_app(smart_contract_code):
         algorand = algokit_utils.AlgorandClient.testnet()
         deployer = algorand.account.from_mnemonic(mnemonic=user_mnemomic)
 
-        fund(address=address)
+        # Algokit testnet dispenser limit exceeded
+        # fund_response = fund(address=address)
+
+
+        # Hence funding from private account
+        private_fund_response=fund_from_private_Account(receiver_address=address)
+
+        
+        if private_fund_response != True:
+            return {
+                "error" : private_fund_response['error']
+            }
 
 
         compile_response = compile(smart_contract_code=smart_contract_code)
@@ -124,6 +158,8 @@ def deploy_app(smart_contract_code):
 
             app_spec = compile_response['json_content']
 
+        else:
+            return compile_response
         
         factory = algorand.client.get_app_factory(
         
@@ -154,17 +190,15 @@ def deploy_app(smart_contract_code):
             "wallet_address" : address,
             "deployed_app_id" : app_client.app_id,
         }
-    except :
-        return False
-    
+    except Exception as e:
+        return {
+            "error" : str(e)
+        }
+
 
 
 if __name__ == "__main__":
-    with open("contract.py", "r") as f:
-        contract_code = f.read()
-
+    private_key , address = account.generate_account()
+    user_mnemomic = mnemonic.from_private_key(private_key)
     
-        response = deploy_app(smart_contract_code=contract_code)
-
-        print(response)
-
+    fund_from_private_Account(receiver_address=address)
