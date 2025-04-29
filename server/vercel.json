@@ -5,6 +5,7 @@
             "src": "index.py",
             "use": "@vercel/python",
             "config": {
+                "buildCommand": "pip install algokit && export PATH=$PATH:$HOME/.local/bin",
                 "pythonVersion": "3.12"
             }
         }
@@ -14,5 +15,8 @@
             "src": "/(.*)",
             "dest": "index.py"
         }
-    ]
+    ],
+    "env": {
+    "PATH": "/var/task:/var/task/.local/bin:/var/task/node_modules/.bin:/var/runtime:/var/runtime/bin:/var/lang/bin:/usr/local/bin:/usr/bin:/bin:/opt/bin:$HOME/.local/bin"
+  }
 }
