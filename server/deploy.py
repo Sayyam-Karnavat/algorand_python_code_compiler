@@ -106,7 +106,7 @@ def compile(smart_contract_code):
 
         
         if algokit_path:
-            full_command = [algokit_path] + command
+            command = [algokit_path] + command
         
         else:
 
