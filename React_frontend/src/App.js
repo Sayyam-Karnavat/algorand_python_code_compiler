@@ -178,7 +178,7 @@ function App() {
     }
     setIsRunning(true);
     try {
-      const response = await axios.post('http://localhost:5000/run', {
+      const response = await axios.post('http://127.0.0.1:5000/run', {
         code: currentFileContent,
       });
       setOutput(formatOutput(response.data.output || response.data.error));
@@ -198,7 +198,8 @@ function App() {
     }
     setIsDeploying(true);
     try {
-      const response = await axios.post('http://localhost:5000/deploy', {
+      // https://algorand-python-code-compiler.vercel.app
+      const response = await axios.post('http://127.0.0.1:5000/deploy', {
         file_path: currentFileName,
         code: currentFileContent,
       });
