@@ -9,6 +9,7 @@ import subprocess
 import json
 import shutil
 import tempfile
+import sys
 
 
 os.environ["PATH"] = f"{os.environ.get('PATH')}:{os.path.expanduser('~/.local/bin')}"
@@ -90,11 +91,31 @@ def compile(smart_contract_code):
 
         # Expected output JSON file path
         json_file_path = os.path.join(temp_dir, f"{contract_name}.arc56.json")
+        
 
-        # Compile the contract with algokit
-        command = [
-            "algokit", "compile", "python", temp_file_path, "--output-arc56", "--no-output-teal", "--out-dir", temp_dir
-        ]
+        possible_paths = [
+        os.path.join(sys.prefix, 'bin', 'algokit'),  # Standard pip install location
+        os.path.join(os.path.expanduser('~'), '.local', 'bin', 'algokit'),  # User install location
+        '/var/task/.local/bin/algokit'  # Common Vercel location
+    ]
+        algokit_path = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                algokit_path = path
+                break
+
+        
+        if algokit_path:
+            full_command = [algokit_path] + command
+        
+        else:
+
+            # Compile the contract with algokit
+            command = [
+                "algokit", "compile", "python", temp_file_path, "--output-arc56", "--no-output-teal", "--out-dir", temp_dir
+            ]
+
+
         result = subprocess.run(
             command,
             capture_output=True,
