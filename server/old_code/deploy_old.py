@@ -3,15 +3,13 @@ import base64
 from algosdk.v2client import algod
 from algosdk import account, transaction , mnemonic
 from algokit_utils import account as util_account
-
-
-
+import algokit_utils
 
 
 def fund_account(wallet_address:str , algod_client : algod.AlgodClient):
 
     try:
-        master_account = util_account.get_localnet_default_account(client=algod_client)
+        master_account = util_account.get_account_from_mnemonic(mnemonic=os.getenv("DEPLOYER"))
         master_wallet , master_private_key = master_account.address , master_account.private_key
         params = algod_client.suggested_params()
         payment_txn = transaction.PaymentTxn(
@@ -31,13 +29,12 @@ def fund_account(wallet_address:str , algod_client : algod.AlgodClient):
         return -1
     
 
-
-
 def deploy_app(ARC32_FILE_PATH = "HelloWorld.arc32.json"):
     """Deploy the application using ARC-32 JSON"""
 
-    # Testnet :- https://testnet-api.algonode.cloud/
-    ALGOD_ADDRESS = "http://localhost:4001"
+    
+    # ALGOD_ADDRESS = "http://localhost:4001"
+    ALGOD_ADDRESS = "https://testnet-api.algonode.cloud/"
     ALGOD_TOKEN = "a" * 64
 
     
@@ -49,7 +46,7 @@ def deploy_app(ARC32_FILE_PATH = "HelloWorld.arc32.json"):
 
     # Fund account
     is_funding_successfull = fund_account(wallet_address=wallet_address , algod_client=client)
-
+    # is_funding_successfull = fund(address=wallet_address)
 
     if is_funding_successfull == 1:
         try:
