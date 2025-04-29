@@ -13,6 +13,8 @@ WORKDIR /app
 
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install pipx and algokit
@@ -20,11 +22,17 @@ RUN pip install --no-cache-dir pipx
 ENV PATH="/root/.local/bin:${PATH}"
 RUN pipx install algokit
 
+# Verify algokit installation
+RUN algokit --version
+
 # Copy the rest of the application
 COPY . .
 
-# Expose the port your app runs on
+# Expose the port your app runs on (default for Vercel)
 EXPOSE 3000
 
-# Command to run the application
-CMD ["python", "index.py"]
+# Set environment variable for Flask
+ENV FLASK_APP=app.py
+
+# Command to run the application with gunicorn
+CMD gunicorn --bind 0.0.0.0:3000 --workers 1 --threads 8 app:app

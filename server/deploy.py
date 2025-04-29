@@ -11,10 +11,11 @@ import shutil
 import tempfile
 
 
+os.environ["PATH"] = f"{os.environ.get('PATH')}:{os.path.expanduser('~/.local/bin')}"
 
 load_dotenv()
 
-os.environ["PATH"] = f"{os.environ.get('PATH')}:{os.path.expanduser('~/.local/bin')}"
+
 
 
 

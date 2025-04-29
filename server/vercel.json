@@ -7,6 +7,16 @@
       }
     ],
     "routes": [
+      { 
+        "src": "/deploy", 
+        "dest": "/deploy",
+        "methods": ["POST"]
+      },
+      { 
+        "src": "/run", 
+        "dest": "/run",
+        "methods": ["POST"]
+      },
       {
         "src": "/(.*)",
         "dest": "/"
