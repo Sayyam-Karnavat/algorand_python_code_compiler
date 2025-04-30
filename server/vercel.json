@@ -5,7 +5,6 @@
             "src": "index.py",
             "use": "@vercel/python",
             "config": {
-                "buildCommand": "pip install algokit && export PATH=$PATH:$HOME/.local/bin",
                 "pythonVersion": "3.11"
             }
         }
