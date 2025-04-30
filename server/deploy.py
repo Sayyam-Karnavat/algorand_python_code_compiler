@@ -85,11 +85,18 @@ def compile(smart_contract_code):
     if not algokit_path:
         return {"error": "'algokit' not found in the system PATH. Please ensure it's installed correctly."}
 
+
+    if algokit_path:
+
+        # Compile the contract with algokit
+        command = [
+            algokit_path ,"algokit", "compile", "python", temp_file_path, "--output-arc56", "--no-output-teal" ,"--out-dir" , temp_compile_directory
+        ]
     
-    # Compile the contract with algokit
-    command = [
-        "algokit", "compile", "python", temp_file_path, "--output-arc56", "--no-output-teal" ,"--out-dir" , temp_compile_directory
-    ]
+    else:
+        command = [
+            "algokit", "compile", "python", temp_file_path, "--output-arc56", "--no-output-teal" ,"--out-dir" , temp_compile_directory
+        ]
 
 
     result = subprocess.run(
