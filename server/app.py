@@ -60,38 +60,7 @@ def run_code():
         return jsonify({"error": traceback.format_exc()}), 500
     
 
-@app.route("/")
-def hompage():
-    return "Server Running !!!"
 
-
-
-@app.route("/debug")
-def debug():
-    
-    
-    debug_info = {
-        "PATH": os.environ.get("PATH", "Not set"),
-        "HOME": os.environ.get("HOME", "Not set"),
-    }
-    
-    try:
-        which_result = subprocess.run(["which", "algokit"], 
-                                     capture_output=True, 
-                                     text=True)
-        debug_info["which_algokit"] = which_result.stdout.strip() or which_result.stderr
-    except Exception as e:
-        debug_info["which_algokit_error"] = str(e)
-        
-    try:
-        version_result = subprocess.run(["algokit", "--version"], 
-                                       capture_output=True, 
-                                       text=True)
-        debug_info["algokit_version"] = version_result.stdout.strip() or version_result.stderr
-    except Exception as e:
-        debug_info["algokit_version_error"] = str(e)
-        
-    return jsonify(debug_info)
 
 
 

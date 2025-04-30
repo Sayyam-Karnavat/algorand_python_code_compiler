@@ -117,7 +117,7 @@ const Input = styled.input`
 `;
 
 function App() {
-  const [files, setFiles] = useState([{ name: 'test_contract.py', content: '' }]);
+  const [files, setFiles] = useState([{ name: 'sample_contract.py', content: '' }]);
   const [selectedFile, setSelectedFile] = useState(0);
   const [output, setOutput] = useState('');
   const [newFileName, setNewFileName] = useState('');
@@ -178,7 +178,7 @@ function App() {
     }
     setIsRunning(true);
     try {
-      const response = await axios.post('https://algorand-python-code-compiler.vercel.app/run', {
+      const response = await axios.post('http://127.0.0.1:5000/run', {
         code: currentFileContent,
       });
       setOutput(formatOutput(response.data.output || response.data.error));
@@ -199,7 +199,7 @@ function App() {
     setIsDeploying(true);
     try {
       // https://algorand-python-code-compiler.vercel.app
-      const response = await axios.post('https://algorand-python-code-compiler.vercel.app/deploy', {
+      const response = await axios.post('http://127.0.0.1:5000/deploy', {
         file_path: currentFileName,
         code: currentFileContent,
       });
