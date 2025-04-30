@@ -62,5 +62,7 @@ def run_code():
 
 
 
-
+@app.route("/")
+def homepage():
+    return "Server is running ..."
 
