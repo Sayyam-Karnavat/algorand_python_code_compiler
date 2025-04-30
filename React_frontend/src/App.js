@@ -178,7 +178,7 @@ function App() {
     }
     setIsRunning(true);
     try {
-      const response = await axios.post('https://algorand-python-code-compiler.vercel.app/run', {
+      const response = await axios.post('https://algorand-python-code-compiler.onrender.com/run', {
         code: currentFileContent,
       });
       setOutput(formatOutput(response.data.output || response.data.error));
@@ -199,7 +199,7 @@ function App() {
     setIsDeploying(true);
     try {
       // https://algorand-python-code-compiler.vercel.app
-      const response = await axios.post('https://algorand-python-code-compiler.vercel.app/deploy', {
+      const response = await axios.post('https://algorand-python-code-compiler.onrender.com/deploy', {
         file_path: currentFileName,
         code: currentFileContent,
       });

@@ -81,6 +81,11 @@ def compile(smart_contract_code):
     json_file_path = os.path.join(temp_compile_directory , f"{contract_name}.arc56.json")
     
 
+    algokit_path = shutil.which("algokit")
+    if not algokit_path:
+        return {"error": "'algokit' not found in the system PATH. Please ensure it's installed correctly."}
+
+    
     # Compile the contract with algokit
     command = [
         "algokit", "compile", "python", temp_file_path, "--output-arc56", "--no-output-teal" ,"--out-dir" , temp_compile_directory

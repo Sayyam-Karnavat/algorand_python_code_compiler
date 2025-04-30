@@ -10,7 +10,6 @@ from contextlib import redirect_stdout
 from deploy import deploy_app  # Assuming this is your deployment logic
 from flask_cors import CORS
 import os
-import subprocess
 
 app = Flask(__name__)
 CORS(app)
