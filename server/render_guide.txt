@@ -1,0 +1,5 @@
+1. Select python as langauge
+2. User root as "server" or whatever folder you want to work in 
+3. In custom command use "pip install pipx && pipx install algokit && pip install -r requirements.txt"
+4 . If default python version is different then in environment variables Select
+    PYTHON_VERSION = 3.12.2 ( For latest algokit libraries support)
