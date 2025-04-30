@@ -86,7 +86,7 @@ def compile(smart_contract_code):
         ".venv/bin/algokit", "compile", "python", temp_file_path, "--output-arc56", "--no-output-teal" ,"--out-dir" , temp_compile_directory
     ]
 
-
+    
     result = subprocess.run(
         command,
         capture_output=True,
