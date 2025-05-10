@@ -196,4 +196,43 @@ export default function FileManager() {
             ))}
           </ul>
         </div>
+
+        {/* Main */}
+        <div className="flex-1 flex flex-col p-6">
+          <div className="flex justify-between items-center mb-4 border-b dark:border-gray-700 border-gray-300">
+            <h1 className="text-2xl text-gray-900 dark:text-gray-100">
+              {files[selectedIndex]?.name || "No file"}
+            </h1>
+            <Tooltip title="Feedback">
+              <IconButton color="primary" onClick={() => setFeedbackOpen(true)}>
+                <Feedback />
+              </IconButton>
+            </Tooltip>
+          </div>
+
+          {/* Editor */}
+          <AceEditor
+            mode="python"
+            theme="monokai"
+            value={files[selectedIndex]?.content || ""}
+            onChange={handleCodeChange}
+            name="editor"
+            width="100%"
+            height={`calc(100vh - ${outputHeight + 200}px)`} // adjust for header/buttons/output
+            setOptions={{ showLineNumbers: true, tabSize: 4 }}
+            className="rounded border dark:border-gray-700 border-gray-300 mb-4"
+          />
+
+          {/* Actions */}
+          <div className="flex gap-2 mb-2">
+            <Button variant="contained" startIcon={<PlayArrow />} onClick={runCode} disabled={isRunning}>
+              {isRunning ? "Running..." : "Run"}
+            </Button>
+            <Button variant="contained" startIcon={<RocketLaunch />} onClick={deployCode} disabled={isDeploying}>
+              {isDeploying ? "Deploying..." : "Deploy"}
+            </Button>
+          </div>
+
+
+          
 }
