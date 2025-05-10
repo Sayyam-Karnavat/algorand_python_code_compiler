@@ -93,4 +93,20 @@ export default function FileManager() {
     }
   };
 
+
+  const runCode = async () => {
+    const code = files[selectedIndex].content;
+    if (!code.trim()) return setOutput("No code to run.");
+    setIsRunning(true);
+    try {
+      const res = await axios.post("https://algorand-python-code-compiler.onrender.com/run", { code });
+      setOutput(formatOutput(res.data.output || res.data.error));
+    } catch (err) {
+      setOutput(`Error running code: ${err.message}`);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  
 }
