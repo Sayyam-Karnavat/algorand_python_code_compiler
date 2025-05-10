@@ -108,5 +108,92 @@ export default function FileManager() {
     }
   };
 
-  
+
+  const submitFeedback = () => {
+    console.log("Feedback:", feedbackComment);
+    setFeedbackComment("");
+    setFeedbackOpen(false);
+  };
+
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <div className="flex h-screen dark:bg-gray-900 bg-white">
+
+        {/* Sidebar */}
+        <div className="w-64 p-4 shadow-lg dark:bg-gray-800 bg-gray-100">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl text-gray-900 dark:text-gray-100">📁 My Files</h2>
+            <Switch checked={darkMode} onChange={() => setDarkMode(!darkMode)} />
+          </div>
+          <div className="flex gap-2 mb-4">
+            <TextField
+              size="small"
+              variant="outlined"
+              label="New File"
+              value={newFileName}
+              onChange={(e) => setNewFileName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAddFile()}
+              className="flex-1"
+            />
+            <Tooltip title="Add New File">
+              <IconButton color="primary" onClick={handleAddFile}>
+                <Add />
+              </IconButton>
+            </Tooltip>
+          </div>
+          <ul className="space-y-2">
+            {files.map((f, i) => (
+              <li
+                key={f.name + i}
+                onClick={() => setSelectedIndex(i)}
+                className={`flex justify-between items-center p-2 rounded cursor-pointer ${
+                  i === selectedIndex
+                    ? "bg-blue-200 dark:bg-blue-700"
+                    : "hover:bg-blue-100 dark:hover:bg-blue-600"
+                }`}
+              >
+                <span className="text-gray-900 dark:text-gray-100">{f.name}</span>
+                <IconButton size="small" color="error" onClick={() => handleDeleteFile(i)}>
+                  <Delete fontSize="small" />
+                </IconButton>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Main */}
+        <div className="flex-1 flex flex-col p-6">
+          <div className="flex justify-between items-center mb-4 border-b dark:border-gray-700 border-gray-300">
+            <h1 className="text-2xl text-gray-900 dark:text-gray-100">
+              {files[selectedIndex]?.name || "No file"}
+            </h1>
+            <Tooltip title="Feedback">
+              <IconButton color="primary" onClick={() => setFeedbackOpen(true)}>
+                <Feedback />
+              </IconButton>
+            </Tooltip>
+          </div>
+
+
+          <ul className="space-y-2">
+            {files.map((f, i) => (
+              <li
+                key={f.name + i}
+                onClick={() => setSelectedIndex(i)}
+                className={`flex justify-between items-center p-2 rounded cursor-pointer ${
+                  i === selectedIndex
+                    ? "bg-blue-200 dark:bg-blue-700"
+                    : "hover:bg-blue-100 dark:hover:bg-blue-600"
+                }`}
+              >
+                <span className="text-gray-900 dark:text-gray-100">{f.name}</span>
+                <IconButton size="small" color="error" onClick={() => handleDeleteFile(i)}>
+                  <Delete fontSize="small" />
+                </IconButton>
+              </li>
+            ))}
+          </ul>
+        </div>
 }
