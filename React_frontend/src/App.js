@@ -62,4 +62,35 @@ export default function FileManager() {
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
   };
+
+  const handleAddFile = () => {
+    if (!newFileName.trim()) return;
+    const fileName = newFileName.endsWith(".py") ? newFileName : `${newFileName}.py`;
+    setFiles([...files, { name: fileName, content: "" }]);
+    setSelectedIndex(files.length);
+    setNewFileName("");
+  };
+
+
+
+  const handleDeleteFile = (index) => {
+    if (files.length === 1) return alert("Cannot delete the last file.");
+    setFiles(files.filter((_, i) => i !== index));
+    setSelectedIndex((prev) => (prev === index ? 0 : prev > index ? prev - 1 : prev));
+  };
+
+  const handleCodeChange = (newCode) => {
+    const updated = [...files];
+    updated[selectedIndex].content = newCode;
+    setFiles(updated);
+  };
+
+  const formatOutput = (text) => {
+    try {
+      return JSON.stringify(JSON.parse(text), null, 2);
+    } catch {
+      return text;
+    }
+  };
+
 }
