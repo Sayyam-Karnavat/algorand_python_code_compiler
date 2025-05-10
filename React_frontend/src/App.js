@@ -30,6 +30,17 @@ export default function FileManager() {
     [darkMode]
   );
 
+  const [files, setFiles] = useState([
+    {
+      name: "sample_contract.py",
+      content: `from algopy import ARC4Contract, arc4
+
+class HelloWorldContract(ARC4Contract):
+    @arc4.abimethod
+    def hello(self, name: arc4.String) -> arc4.String:
+        return "Hello, " + name`
+    }
+  ]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [newFileName, setNewFileName] = useState("");
   const [output, setOutput] = useState("");
@@ -44,12 +55,10 @@ export default function FileManager() {
   const startHeight = useRef(0);
   const resizerRef = useRef(null);
 
-
   const onMouseMove = (e) => {
     const dy = startY.current - e.clientY;
     setOutputHeight(Math.max(100, startHeight.current + dy));
   };
-
 
   const onMouseUp = () => {
     document.removeEventListener("mousemove", onMouseMove);
@@ -71,8 +80,6 @@ export default function FileManager() {
     setNewFileName("");
   };
 
-
-
   const handleDeleteFile = (index) => {
     if (files.length === 1) return alert("Cannot delete the last file.");
     setFiles(files.filter((_, i) => i !== index));
@@ -93,7 +100,6 @@ export default function FileManager() {
     }
   };
 
-
   const runCode = async () => {
     const code = files[selectedIndex].content;
     if (!code.trim()) return setOutput("No code to run.");
@@ -108,13 +114,28 @@ export default function FileManager() {
     }
   };
 
+  const deployCode = async () => {
+    const { name, content } = files[selectedIndex];
+    if (!content.trim()) return setOutput("No code to deploy.");
+    setIsDeploying(true);
+    try {
+      const res = await axios.post("https://algorand-python-code-compiler.onrender.com/deploy", { file_path: name, code: content });
+      const msg = res.data.message
+        ? `${res.data.message}: ${JSON.stringify(res.data.deploy_result)}`
+        : `Error: ${res.data.error}`;
+      setOutput(formatOutput(msg));
+    } catch (err) {
+      setOutput(`Error deploying code: ${err.message}`);
+    } finally {
+      setIsDeploying(false);
+    }
+  };
 
   const submitFeedback = () => {
     console.log("Feedback:", feedbackComment);
     setFeedbackComment("");
     setFeedbackOpen(false);
   };
-
 
   return (
     <ThemeProvider theme={theme}>
@@ -176,40 +197,6 @@ export default function FileManager() {
             </Tooltip>
           </div>
 
-
-          <ul className="space-y-2">
-            {files.map((f, i) => (
-              <li
-                key={f.name + i}
-                onClick={() => setSelectedIndex(i)}
-                className={`flex justify-between items-center p-2 rounded cursor-pointer ${
-                  i === selectedIndex
-                    ? "bg-blue-200 dark:bg-blue-700"
-                    : "hover:bg-blue-100 dark:hover:bg-blue-600"
-                }`}
-              >
-                <span className="text-gray-900 dark:text-gray-100">{f.name}</span>
-                <IconButton size="small" color="error" onClick={() => handleDeleteFile(i)}>
-                  <Delete fontSize="small" />
-                </IconButton>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Main */}
-        <div className="flex-1 flex flex-col p-6">
-          <div className="flex justify-between items-center mb-4 border-b dark:border-gray-700 border-gray-300">
-            <h1 className="text-2xl text-gray-900 dark:text-gray-100">
-              {files[selectedIndex]?.name || "No file"}
-            </h1>
-            <Tooltip title="Feedback">
-              <IconButton color="primary" onClick={() => setFeedbackOpen(true)}>
-                <Feedback />
-              </IconButton>
-            </Tooltip>
-          </div>
-
           {/* Editor */}
           <AceEditor
             mode="python"
@@ -233,6 +220,45 @@ export default function FileManager() {
             </Button>
           </div>
 
+          {/* Resizer */}
+          <div
+            ref={resizerRef}
+            onMouseDown={onMouseDown}
+            className="h-1 bg-gray-400 dark:bg-gray-600 cursor-row-resize mb-2"
+          />
 
-          
+          {/* Output Panel */}
+          <div
+            className="bg-black text-green-400 p-3 rounded font-mono overflow-y-auto"
+            style={{ height: outputHeight, width: 1000, maxWidth: '100%' }}
+          >
+            <pre>{output || 'Output will appear here...'}</pre>
+          </div>
+        </div>
+
+        {/* Feedback Dialog */}
+        <Dialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} fullWidth maxWidth="sm">
+          <DialogTitle>Submit Feedback</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Your comments"
+              fullWidth
+              multiline
+              minRows={3}
+              value={feedbackComment}
+              onChange={(e) => setFeedbackComment(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setFeedbackOpen(false)}>Cancel</Button>
+            <Button onClick={submitFeedback} variant="contained">
+              Submit
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
+    </ThemeProvider>
+  );
 }
