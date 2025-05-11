@@ -1,11 +1,16 @@
 import streamlit as st
 from streamlit_ace import st_ace
-import os
-import requests
 import uuid
-import time
+import io
+import base64
+import pyodide
+import asyncio
+import sys
 
-# Custom CSS for modern, Remix-like styling
+# Set page config as the first Streamlit command
+st.set_page_config(layout="wide", page_title="Python IDE", page_icon="🐍")
+
+# Custom CSS for professional dark theme
 st.markdown("""
     <style>
     .main {
@@ -23,18 +28,14 @@ st.markdown("""
         border-radius: 8px;
         border: none;
         padding: 8px 16px;
-        transition: background-color 0.2s;
+        transition: all 0.2s;
+        width: 100%;
     }
     .stButton>button:hover {
         background-color: #45475a;
+        transform: translateY(-1px);
     }
     .stTextInput>div>input {
-        background-color: #313244;
-        color: #cdd6f4;
-        border: 1px solid #585b70;
-        border-radius: 8px;
-    }
-    .stTextArea textarea {
         background-color: #313244;
         color: #cdd6f4;
         border: 1px solid #585b70;
@@ -43,14 +44,15 @@ st.markdown("""
     .file-tab {
         background-color: #313244;
         color: #cdd6f4;
-        padding: 8px 16px;
+        padding: 10px 20px;
         border-radius: 8px 8px 0 0;
         margin-right: 4px;
         cursor: pointer;
+        transition: all 0.2s;
     }
     .file-tab.active {
         background-color: #1e1e2e;
-        border-bottom: 2px solid #89b4fa;
+        border-bottom: 3px solid #89b4fa;
     }
     .file-tab:hover {
         background-color: #45475a;
@@ -61,123 +63,102 @@ st.markdown("""
         border-radius: 8px;
         font-family: 'Fira Code', monospace;
         color: #cdd6f4;
-        height: 200px;
+        height: 250px;
         overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
     }
-    .spinner {
-        text-align: center;
-        color: #89b4fa;
-        font-size: 16px;
+    .editor-container {
+        border: 1px solid #313244;
+        border-radius: 8px;
+        padding: 8px;
+        background-color: #181825;
+    }
+    .action-bar {
+        background-color: #181825;
+        padding: 8px;
+        border-radius: 8px;
+        margin-bottom: 16px;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Function to list Python files (excluding app.py and server.py)
-def list_files():
-    return [f for f in os.listdir() if f not in ("app.py", "server.py", "deploy.py") and f.endswith(".py")]
-
-# Function to create a new file
-def create_file(file_name):
-    if file_name and not os.path.exists(file_name):
-        with open(file_name, "w") as f:
-            f.write("")
-        return True
-    return False
-
-# Function to delete a file
-def delete_file(file_name):
-    if os.path.exists(file_name):
-        os.remove(file_name)
-        return True
-    return False
-
-# Function to read file content
-def read_file(file_path):
-    try:
-        with open(file_path, "r") as f:
-            return f.read()
-    except:
-        return ""
-
-# Function to write file content
-def write_file(file_path, content):
-    try:
-        with open(file_path, "w") as f:
-            f.write(content)
-        return True
-    except:
-        return False
-
-# Function to send a request to run Python code on the backend
-def run_code_backend(code):
-    try:
-        response = requests.post("http://127.0.0.1:5000/run", json={"code": code}, timeout=10)
-        if response.status_code == 200:
-            return response.json().get("output", "Execution completed")
-        else:
-            return response.json().get("error", "Execution failed")
-    except requests.RequestException as e:
-        return f"Error connecting to backend: {str(e)}"
-
-# Function to send deploy request to Flask server
-def deploy_code(file_path):
-    try:
-        response = requests.post("http://127.0.0.1:5000/deploy", json={"file_path": file_path}, timeout=10)
-        if response.status_code == 200:
-            return response.json().get("deploy_result", "Deployment completed")
-        else:
-            return response.json().get("error", "Deployment failed")
-    except requests.RequestException as e:
-        return f"Error connecting to backend: {str(e)}"
+# Simulated file system for Streamlit Cloud
+if "file_system" not in st.session_state:
+    st.session_state.file_system = {"example.py": "# Sample Python code\nprint('Hello, World!')"}
 
 # Initialize session state
 if "open_files" not in st.session_state:
     st.session_state.open_files = {}
-
 if "active_file" not in st.session_state:
     st.session_state.active_file = None
-
 if "show_create_file" not in st.session_state:
     st.session_state.show_create_file = False
-
 if "output" not in st.session_state:
     st.session_state.output = ""
 
-if "deploy_output" not in st.session_state:
-    st.session_state.deploy_output = ""
+# File operations
+def create_file(file_name):
+    if file_name and file_name.endswith(".py") and file_name not in st.session_state.file_system:
+        st.session_state.file_system[file_name] = ""
+        return True
+    return False
 
-if "loading" not in st.session_state:
-    st.session_state.loading = False
+def delete_file(file_name):
+    if file_name in st.session_state.file_system:
+        del st.session_state.file_system[file_name]
+        return True
+    return False
+
+def read_file(file_name):
+    return st.session_state.file_system.get(file_name, "")
+
+def write_file(file_name, content):
+    st.session_state.file_system[file_name] = content
+    return True
+
+# Run Python code using Pyodide
+async def run_code(code):
+    try:
+        # Redirect stdout
+        output = io.StringIO()
+        sys.stdout = output
+        
+        # Execute code
+        await pyodide.runPythonAsync(code)
+        
+        # Get output
+        result = output.getvalue()
+        sys.stdout = sys.__stdout__
+        
+        return result or "Execution completed"
+    except Exception as e:
+        sys.stdout = sys.__stdout__
+        return f"Error: {str(e)}"
 
 # Streamlit UI
-st.set_page_config(layout="wide", page_title="Algorand Smart Contract IDE", page_icon="⚙️")
-st.markdown("<h1 style='color: #cdd6f4; font-family: Inter, sans-serif;'>Algorand Smart Contract IDE</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='color: #cdd6f4; font-family: Inter, sans-serif;'>Professional Python IDE</h1>", unsafe_allow_html=True)
 
-# Sidebar - File Explorer & Create File Section
+# Sidebar - File Explorer
 with st.sidebar:
     st.markdown("<h3 style='color: #cdd6f4;'>File Explorer</h3>", unsafe_allow_html=True)
     
-    # Toggle for creating new file
     if st.button("📄 New File", key="new_file_btn"):
         st.session_state.show_create_file = not st.session_state.show_create_file
 
-    # File creation input
     if st.session_state.show_create_file:
-        new_file_name = st.text_input("Enter filename (e.g., contract.py)", key="new_file_input")
+        new_file_name = st.text_input("Enter filename (e.g., script.py)", key="new_file_input")
         if st.button("Create File", key="create_file_btn"):
-            if new_file_name.endswith(".py"):
-                if create_file(new_file_name):
-                    st.success(f"File '{new_file_name}' created successfully!")
-                    st.session_state.open_files[new_file_name] = ""
-                    st.session_state.active_file = new_file_name
-                    st.session_state.show_create_file = False
-                else:
-                    st.error("File already exists or invalid name.")
+            if create_file(new_file_name):
+                st.success(f"File '{new_file_name}' created successfully!")
+                st.session_state.open_files[new_file_name] = ""
+                st.session_state.active_file = new_file_name
+                st.session_state.show_create_file = False
             else:
-                st.error("Filename must end with .py")
+                st.error("File already exists or invalid name.")
 
     # File list
-    files = list_files()
+    files = list(st.session_state.file_system.keys())
     for file in files:
         col1, col2 = st.columns([3, 1])
         with col1:
@@ -195,14 +176,12 @@ with st.sidebar:
                     st.success(f"Deleted {file}")
                     st.rerun()
 
-# Main content - File tabs and editor
+# Main content
 if st.session_state.open_files:
     # File tabs
-    tab_cols = st.columns(len(st.segmental_state.open_files) + 1)
-
-
+    tabs = st.columns(len(st.session_state.open_files))
     for i, file in enumerate(st.session_state.open_files.keys()):
-        with tab_cols[i]:
+        with tabs[i]:
             tab_style = "file-tab active" if file == st.session_state.active_file else "file-tab"
             if st.button(f"{file} ✖", key=f"tab_{file}_{uuid.uuid4()}", help="Close file"):
                 del st.session_state.open_files[file]
@@ -211,8 +190,9 @@ if st.session_state.open_files:
                 st.rerun()
             st.markdown(f"<div class='{tab_style}'>{file}</div>", unsafe_allow_html=True)
 
-    # Code editor for active file
+    # Editor
     if st.session_state.active_file:
+        st.markdown("<div class='editor-container'>", unsafe_allow_html=True)
         edited_code = st_ace(
             value=st.session_state.open_files[st.session_state.active_file],
             language="python",
@@ -227,44 +207,42 @@ if st.session_state.open_files:
             max_lines=50
         )
 
-        # Auto-save on code change
+        # Auto-save
         if edited_code != st.session_state.open_files[st.session_state.active_file]:
             st.session_state.open_files[st.session_state.active_file] = edited_code
             write_file(st.session_state.active_file, edited_code)
             st.success(f"Auto-saved {st.session_state.active_file}", icon="💾")
 
-        # Action buttons
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # Action bar
+        st.markdown("<div class='action-bar'>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
         with col1:
-            if st.button("Save", key="save_btn"):
-                if write_file(st.session_state.active_file, st.session_state.open_files[st.session_state.active_file]):
-                    st.success(f"Saved {st.session_state.active_file}", icon="💾")
-                else:
-                    st.error("Failed to save file.")
-
-        with col2:
             if st.button("Run Code", key="run_btn"):
-                st.session_state.loading = True
                 st.session_state.output = ""
                 code_content = st.session_state.open_files[st.session_state.active_file]
                 with st.spinner("Running code..."):
-                    time.sleep(0.5)  # Simulate async feel
-                    st.session_state.output = run_code_backend(code_content)
-                st.session_state.loading = False
+                    # Run code asynchronously
+                    st.session_state.output = asyncio.run(run_code(code_content))
+
+        with col2:
+            if st.button("Download", key="download_btn"):
+                # Create download link
+                file_content = st.session_state.open_files[st.session_state.active_file]
+                b64 = base64.b64encode(file_content.encode()).decode()
+                href = f'<a href="data:text/plain;base64,{b64}" download="{st.session_state.active_file}">Download {st.session_state.active_file}</a>'
+                st.markdown(href, unsafe_allow_html=True)
 
         with col3:
-            if st.button("Deploy", key="deploy_btn"):
-                st.session_state.loading = True
-                st.session_state.deploy_output = ""
-                with st.spinner("Deploying contract..."):
-                    time.sleep(0.5)  # Simulate async feel
-                    st.session_state.deploy_output = deploy_code(st.session_state.active_file)
-                st.session_state.loading = False
+            if st.button("Clear Output", key="clear_btn"):
+                st.session_state.output = ""
 
-        # Terminal output
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # Terminal
         st.markdown("<h3 style='color: #cdd6f4;'>Terminal</h3>", unsafe_allow_html=True)
-        output = st.session_state.output or st.session_state.deploy_output
-        st.markdown(f"<div class='terminal'>{output}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='terminal'>{st.session_state.output}</div>", unsafe_allow_html=True)
 
 else:
-    st.info("No files open. Create or open a file from the sidebar to start editing.")
+    st.info("No files open. Create or open a file from the sidebar to start coding.")
