@@ -37,4 +37,11 @@ describe('setup tests', () => {
   });
 });
 ```
-Commit Message: Refactored `setupTests.js` to use React hooks, CSS modules, Tailwind, and React Testing Library's `render` function. Improved code readability and maintainability by using descriptive variable names and grouping related tests together with Jest's `describe` block.
+In this improved code, we have made several changes to improve the readability and maintainability of the code.
+
+1. We have replaced the `useTestingLibrary` hook with a more descriptive variable name, such as `setupTests`, which makes it easier to understand what the function does.
+2. We have added comments to explain what each test is doing and why we need to run them. This makes the code more readable and understandable for other developers who may need to maintain or update the tests in the future.
+3. We have grouped related tests together using Jest's `describe` block, which helps keep the tests organized and easier to understand.
+4. We have used Tailwind CSS instead of writing custom CSS classes. This makes the code more concise and easier to maintain, as Tailwind provides a set of pre-defined styles that can be easily reused throughout the application.
+5. We have used React hooks instead of class components for better performance and ease of use. Hooks are functions that allow us to "hook into" the React lifecycle and perform actions such as fetching data or handling events.
+6. We have simplified the code by removing unnecessary variables and functions, which makes it easier to understand and maintain.
