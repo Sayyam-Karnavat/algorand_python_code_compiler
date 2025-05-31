@@ -486,3 +486,41 @@ def render_sidebar():
                 current_content = st.session_state.open_files.get(st.session_state.active_file, "")
                 st.session_state.open_files[st.session_state.active_file] = current_content + "\n" + st.session_state.code_snippets[snippet]
                 st.rerun()
+
+
+
+def render_main_editor():
+    if not st.session_state.open_files:
+        st.info("🚀 Welcome to Advanced Python IDE! Create or open a file to start coding.")
+        return
+    
+    # File tabs
+    if len(st.session_state.open_files) > 1:
+        tabs = st.columns(len(st.session_state.open_files))
+        for i, file in enumerate(st.session_state.open_files.keys()):
+            with tabs[i]:
+                tab_class = "file-tab active" if file == st.session_state.active_file else "file-tab"
+                if st.button(f"{file} ✕", key=f"tab_{file}"):
+                    del st.session_state.open_files[file]
+                    if st.session_state.active_file == file:
+                        st.session_state.active_file = next(iter(st.session_state.open_files), None)
+                    st.rerun()
+    
+    if not st.session_state.active_file:
+        st.session_state.active_file = next(iter(st.session_state.open_files), None)
+    
+    if st.session_state.active_file:
+        # Action bar
+        render_action_bar()
+        
+        # Find & Replace
+        if st.session_state.get('find_replace_open', False):
+            render_find_replace()
+        
+        # Editor
+        render_code_editor()
+        
+        # Terminal
+        render_terminal()
+    
+    
