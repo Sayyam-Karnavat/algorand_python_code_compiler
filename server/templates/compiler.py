@@ -22,6 +22,21 @@ os.makedirs(TEMPLATES_FOLDER, exist_ok=True)
 def ide():
     return render_template('ide.html')
 
+
+@app.route('/ide/<theme>')
+def ide_with_theme(theme):
+    """Load IDE with specific theme (light/dark)"""
+    return render_template('ide.html', theme=theme)
+
+
+@app.route('/run/blockchain', methods=['POST'])
+def run_blockchain_code():
+    """Execute blockchain Python code with additional libraries"""
+    code = request.json.get('code', '')
+    return execute_code(code, 'blockchain')
+
+
+    
 @app.route('/run', methods=['POST'])
 def run_code():
     code = request.json.get('code', '')
