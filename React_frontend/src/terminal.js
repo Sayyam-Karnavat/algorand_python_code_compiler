@@ -235,9 +235,3 @@ const TerminalOutput = ({
               <Download fontSize="small" />
             </IconButton>
           </Tooltip>
-
-          <Tooltip title="Clear Output">
-            <IconButton 
-              size="small" 
-              onClick={handleClearOutput}
-              className="
