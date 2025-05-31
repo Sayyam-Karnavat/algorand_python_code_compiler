@@ -355,3 +355,28 @@ def run_python_code(code):
         sys.stdout = old_stdout
         sys.stderr = old_stderr
         return f"Runtime Error: {str(e)}"
+
+
+
+# Find and replace functionality
+def find_and_replace(content, find_text, replace_text, case_sensitive=False):
+    if not case_sensitive:
+        pattern = re.compile(re.escape(find_text), re.IGNORECASE)
+        return pattern.sub(replace_text, content)
+    else:
+        return content.replace(find_text, replace_text)
+    
+
+
+# UI Components
+def render_project_header():
+    st.markdown(f"""
+    <div class="project-header">
+        <h1 style='color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;'>
+            🚀 {st.session_state.project_name}
+        </h1>
+        <p style='color: #94a3b8; margin: 8px 0 0 0; font-size: 14px;'>
+            Advanced Python IDE with Multi-language Support
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
