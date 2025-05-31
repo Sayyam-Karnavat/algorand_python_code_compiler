@@ -1,248 +1,246 @@
-import streamlit as st
-from streamlit_ace import st_ace
-import uuid
 import io
 import base64
-import pyodide
-import asyncio
 import sys
+import json
+import zipfile
+import tempfile
+import os
+from datetime import datetime
+import re
+import streamlit as st
+
 
 # Set page config as the first Streamlit command
-st.set_page_config(layout="wide", page_title="Python IDE", page_icon="🐍")
+st.set_page_config(
+    layout="wide", 
+    page_title="Advanced Python IDE", 
+    page_icon="🐍",
+    initial_sidebar_state="expanded"
+)
 
-# Custom CSS for professional dark theme
+# Enhanced CSS for modern glassmorphism theme
 st.markdown("""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap');
+    
     .main {
-        background-color: #1e1e2e;
-        color: #cdd6f4;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #e2e8f0;
         font-family: 'Inter', sans-serif;
     }
+    
     .sidebar .sidebar-content {
-        background-color: #181825;
-        border-right: 1px solid #313244;
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(10px);
+        border-right: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 0 12px 12px 0;
     }
+    
     .stButton>button {
-        background-color: #585b70;
-        color: #cdd6f4;
+        background: rgba(59, 130, 246, 0.8);
+        color: #ffffff;
         border-radius: 8px;
-        border: none;
+        border: 1px solid rgba(59, 130, 246, 0.3);
         padding: 8px 16px;
-        transition: all 0.2s;
+        transition: all 0.3s ease;
         width: 100%;
+        font-weight: 500;
+        backdrop-filter: blur(5px);
     }
+    
     .stButton>button:hover {
-        background-color: #45475a;
-        transform: translateY(-1px);
+        background: rgba(59, 130, 246, 1);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
     }
-    .stTextInput>div>input {
-        background-color: #313244;
-        color: #cdd6f4;
-        border: 1px solid #585b70;
+    
+    .stTextInput>div>input, .stSelectbox>div>div {
+        background: rgba(30, 41, 59, 0.8);
+        color: #e2e8f0;
+        border: 1px solid rgba(148, 163, 184, 0.3);
         border-radius: 8px;
+        backdrop-filter: blur(5px);
     }
+    
     .file-tab {
-        background-color: #313244;
-        color: #cdd6f4;
-        padding: 10px 20px;
+        background: rgba(30, 41, 59, 0.8);
+        color: #e2e8f0;
+        padding: 12px 20px;
         border-radius: 8px 8px 0 0;
         margin-right: 4px;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        display: inline-block;
+        font-weight: 500;
     }
+    
     .file-tab.active {
-        background-color: #1e1e2e;
-        border-bottom: 3px solid #89b4fa;
+        background: rgba(59, 130, 246, 0.8);
+        border-bottom: 3px solid #3b82f6;
+        color: #ffffff;
     }
+    
     .file-tab:hover {
-        background-color: #45475a;
+        background: rgba(71, 85, 105, 0.8);
+        transform: translateY(-1px);
     }
+    
     .terminal {
-        background-color: #181825;
-        padding: 16px;
-        border-radius: 8px;
+        background: rgba(15, 23, 42, 0.9);
+        padding: 20px;
+        border-radius: 12px;
         font-family: 'Fira Code', monospace;
-        color: #cdd6f4;
-        height: 250px;
+        color: #e2e8f0;
+        height: 300px;
         overflow-y: auto;
         white-space: pre-wrap;
         word-break: break-all;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
+    
     .editor-container {
-        border: 1px solid #313244;
-        border-radius: 8px;
-        padding: 8px;
-        background-color: #181825;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 12px;
+        padding: 0;
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
     }
+    
     .action-bar {
-        background-color: #181825;
-        padding: 8px;
-        border-radius: 8px;
+        background: rgba(30, 41, 59, 0.8);
+        padding: 12px 16px;
+        border-radius: 12px;
         margin-bottom: 16px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+    
+    .status-bar {
+        background: rgba(15, 23, 42, 0.9);
+        padding: 8px 16px;
+        border-radius: 0 0 12px 12px;
+        color: #94a3b8;
+        font-size: 12px;
+        font-family: 'Fira Code', monospace;
+        border-top: 1px solid rgba(148, 163, 184, 0.2);
+    }
+    
+    .project-header {
+        background: rgba(15, 23, 42, 0.8);
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+    
+    .feature-card {
+        background: rgba(30, 41, 59, 0.8);
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        backdrop-filter: blur(5px);
+        margin-bottom: 12px;
+    }
+    
+    .success-message {
+        background: rgba(34, 197, 94, 0.2);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        color: #4ade80;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    
+    .error-message {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #f87171;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background: rgba(30, 41, 59, 0.8);
+        border-radius: 8px;
+        color: #e2e8f0;
+        backdrop-filter: blur(5px);
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: rgba(59, 130, 246, 0.8);
+        color: #ffffff;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Simulated file system for Streamlit Cloud
-if "file_system" not in st.session_state:
-    st.session_state.file_system = {"example.py": "# Sample Python code\nprint('Hello, World!')"}
+# Language configurations
+LANGUAGE_CONFIG = {
+    "python": {"extension": ".py", "ace_mode": "python", "icon": "🐍"},
+    "javascript": {"extension": ".js", "ace_mode": "javascript", "icon": "🟨"},
+    "html": {"extension": ".html", "ace_mode": "html", "icon": "🌐"},
+    "css": {"extension": ".css", "ace_mode": "css", "icon": "🎨"},
+    "json": {"extension": ".json", "ace_mode": "json", "icon": "📄"},
+    "markdown": {"extension": ".md", "ace_mode": "markdown", "icon": "📝"},
+}
 
-# Initialize session state
-if "open_files" not in st.session_state:
-    st.session_state.open_files = {}
-if "active_file" not in st.session_state:
-    st.session_state.active_file = None
-if "show_create_file" not in st.session_state:
-    st.session_state.show_create_file = False
-if "output" not in st.session_state:
-    st.session_state.output = ""
+# Project templates
+PROJECT_TEMPLATES = {
+    "Empty Project": {},
+    "Flask Web App": {
+        "app.py": """from flask import Flask, render_template
 
-# File operations
-def create_file(file_name):
-    if file_name and file_name.endswith(".py") and file_name not in st.session_state.file_system:
-        st.session_state.file_system[file_name] = ""
-        return True
-    return False
+app = Flask(__name__)
 
-def delete_file(file_name):
-    if file_name in st.session_state.file_system:
-        del st.session_state.file_system[file_name]
-        return True
-    return False
+@app.route('/')
+def home():
+    return render_template('index.html')
 
-def read_file(file_name):
-    return st.session_state.file_system.get(file_name, "")
+if __name__ == '__main__':
+    app.run(debug=True)
+""",
+        "templates/index.html": """<!DOCTYPE html>
+<html>
+<head>
+    <title>Flask App</title>
+</head>
+<body>
+    <h1>Welcome to Flask!</h1>
+</body>
+</html>
+""",
+        "requirements.txt": "Flask==2.3.2\n"
+    },
+    "Data Analysis": {
+        "analysis.py": """import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
-def write_file(file_name, content):
-    st.session_state.file_system[file_name] = content
-    return True
+# Load and analyze data
+def load_data(filename):
+    return pd.read_csv(filename)
 
-# Run Python code using Pyodide
-async def run_code(code):
-    try:
-        # Redirect stdout
-        output = io.StringIO()
-        sys.stdout = output
-        
-        # Execute code
-        await pyodide.runPythonAsync(code)
-        
-        # Get output
-        result = output.getvalue()
-        sys.stdout = sys.__stdout__
-        
-        return result or "Execution completed"
-    except Exception as e:
-        sys.stdout = sys.__stdout__
-        return f"Error: {str(e)}"
+def basic_stats(df):
+    return df.describe()
 
-# Streamlit UI
-st.markdown("<h1 style='color: #cdd6f4; font-family: Inter, sans-serif;'>Professional Python IDE</h1>", unsafe_allow_html=True)
+if __name__ == '__main__':
+    print("Data Analysis Template")
+""",
+        "requirements.txt": "pandas==2.0.3\nnumpy==1.24.3\nmatplotlib==3.7.1\n"
+    }
+}
 
-# Sidebar - File Explorer
-with st.sidebar:
-    st.markdown("<h3 style='color: #cdd6f4;'>File Explorer</h3>", unsafe_allow_html=True)
-    
-    if st.button("📄 New File", key="new_file_btn"):
-        st.session_state.show_create_file = not st.session_state.show_create_file
 
-    if st.session_state.show_create_file:
-        new_file_name = st.text_input("Enter filename (e.g., script.py)", key="new_file_input")
-        if st.button("Create File", key="create_file_btn"):
-            if create_file(new_file_name):
-                st.success(f"File '{new_file_name}' created successfully!")
-                st.session_state.open_files[new_file_name] = ""
-                st.session_state.active_file = new_file_name
-                st.session_state.show_create_file = False
-            else:
-                st.error("File already exists or invalid name.")
-
-    # File list
-    files = list(st.session_state.file_system.keys())
-    for file in files:
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            if st.button(file, key=f"open_{file}_{uuid.uuid4()}"):
-                if file not in st.session_state.open_files:
-                    st.session_state.open_files[file] = read_file(file)
-                st.session_state.active_file = file
-        with col2:
-            if st.button("🗑️", key=f"delete_{file}_{uuid.uuid4()}"):
-                if delete_file(file):
-                    if file in st.session_state.open_files:
-                        del st.session_state.open_files[file]
-                    if st.session_state.active_file == file:
-                        st.session_state.active_file = next(iter(st.session_state.open_files), None)
-                    st.success(f"Deleted {file}")
-                    st.rerun()
-
-# Main content
-if st.session_state.open_files:
-    # File tabs
-    tabs = st.columns(len(st.session_state.open_files))
-    for i, file in enumerate(st.session_state.open_files.keys()):
-        with tabs[i]:
-            tab_style = "file-tab active" if file == st.session_state.active_file else "file-tab"
-            if st.button(f"{file} ✖", key=f"tab_{file}_{uuid.uuid4()}", help="Close file"):
-                del st.session_state.open_files[file]
-                if st.session_state.active_file == file:
-                    st.session_state.active_file = next(iter(st.session_state.open_files), None)
-                st.rerun()
-            st.markdown(f"<div class='{tab_style}'>{file}</div>", unsafe_allow_html=True)
-
-    # Editor
-    if st.session_state.active_file:
-        st.markdown("<div class='editor-container'>", unsafe_allow_html=True)
-        edited_code = st_ace(
-            value=st.session_state.open_files[st.session_state.active_file],
-            language="python",
-            theme="dracula",
-            height=500,
-            font_size=14,
-            show_gutter=True,
-            wrap=True,
-            auto_update=True,
-            keybinding="vscode",
-            min_lines=20,
-            max_lines=50
-        )
-
-        # Auto-save
-        if edited_code != st.session_state.open_files[st.session_state.active_file]:
-            st.session_state.open_files[st.session_state.active_file] = edited_code
-            write_file(st.session_state.active_file, edited_code)
-            st.success(f"Auto-saved {st.session_state.active_file}", icon="💾")
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        # Action bar
-        st.markdown("<div class='action-bar'>", unsafe_allow_html=True)
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            if st.button("Run Code", key="run_btn"):
-                st.session_state.output = ""
-                code_content = st.session_state.open_files[st.session_state.active_file]
-                with st.spinner("Running code..."):
-                    # Run code asynchronously
-                    st.session_state.output = asyncio.run(run_code(code_content))
-
-        with col2:
-            if st.button("Download", key="download_btn"):
-                # Create download link
-                file_content = st.session_state.open_files[st.session_state.active_file]
-                b64 = base64.b64encode(file_content.encode()).decode()
-                href = f'<a href="data:text/plain;base64,{b64}" download="{st.session_state.active_file}">Download {st.session_state.active_file}</a>'
-                st.markdown(href, unsafe_allow_html=True)
-
-        with col3:
-            if st.button("Clear Output", key="clear_btn"):
-                st.session_state.output = ""
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        # Terminal
-        st.markdown("<h3 style='color: #cdd6f4;'>Terminal</h3>", unsafe_allow_html=True)
-        st.markdown(f"<div class='terminal'>{st.session_state.output}</div>", unsafe_allow_html=True)
-
-else:
-    st.info("No files open. Create or open a file from the sidebar to start coding.")
