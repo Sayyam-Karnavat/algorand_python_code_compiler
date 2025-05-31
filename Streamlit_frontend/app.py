@@ -522,5 +522,53 @@ def render_main_editor():
         
         # Terminal
         render_terminal()
+
+
+def render_action_bar():
+    st.markdown('<div class="action-bar">', unsafe_allow_html=True)
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        if st.button("▶️ Run", key="run_btn", use_container_width=True):
+            execute_current_file()
+    
+    with col2:
+        if st.button("🔍 Find", key="find_btn", use_container_width=True):
+            st.session_state.find_replace_open = not st.session_state.find_replace_open
+    
+    with col3:
+        if st.button("🎨 Format", key="format_btn", use_container_width=True):
+            format_current_file()
+    
+    with col4:
+        if st.button("💾 Save All", key="save_btn", use_container_width=True):
+            save_all_files()
+    
+    with col5:
+        if st.button("🗑️ Clear", key="clear_output_btn", use_container_width=True):
+            st.session_state.output = ""
+            st.session_state.terminal_history = []
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+def render_find_replace():
+    with st.expander("🔍 Find & Replace", expanded=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            find_text = st.text_input("Find", key="find_text")
+        with col2:
+            replace_text = st.text_input("Replace", key="replace_text")
+        
+        col3, col4 = st.columns(2)
+        with col3:
+            case_sensitive = st.checkbox("Case sensitive")
+        with col4:
+            if st.button("Replace All"):
+                if st.session_state.active_file and find_text:
+                    current_content = st.session_state.open_files[st.session_state.active_file]
+                    new_content = find_and_replace(current_content, find_text, replace_text, case_sensitive)
+                    st.session_state.open_files[st.session_state.active_file] = new_content
+                    st.success("Replacement completed")
+
     
     
