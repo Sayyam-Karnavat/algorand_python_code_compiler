@@ -306,3 +306,52 @@ def delete_file(file_name):
             st.session_state.active_file = next(iter(st.session_state.open_files), None)
         return True
     return False
+
+def export_project_as_zip():
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for file_name, content in st.session_state.file_system.items():
+            zip_file.writestr(file_name, content)
+    zip_buffer.seek(0)
+    return zip_buffer
+
+
+# Enhanced code execution
+def run_python_code(code):
+    try:
+        # Capture stdout and stderr
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+        
+        stdout_buffer = io.StringIO()
+        stderr_buffer = io.StringIO()
+        
+        sys.stdout = stdout_buffer
+        sys.stderr = stderr_buffer
+        
+        # Create a new namespace for execution
+        namespace = {'__name__': '__main__'}
+        
+        # Execute the code
+        exec(code, namespace)
+        
+        # Get outputs
+        output = stdout_buffer.getvalue()
+        errors = stderr_buffer.getvalue()
+        
+        # Restore stdout and stderr
+        sys.stdout = old_stdout
+        sys.stderr = old_stderr
+        
+        result = ""
+        if output:
+            result += f"Output:\n{output}\n"
+        if errors:
+            result += f"Errors:\n{errors}\n"
+        
+        return result or "Code executed successfully (no output)"
+        
+    except Exception as e:
+        sys.stdout = old_stdout
+        sys.stderr = old_stderr
+        return f"Runtime Error: {str(e)}"
