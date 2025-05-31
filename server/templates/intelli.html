@@ -586,3 +586,72 @@
                 </button>
             </div>
         </header>
+<!-- Main Content -->
+        <div class="main-content">
+            <!-- Editor Panel -->
+            <div class="editor-panel">
+                <div class="editor-header">
+                    <div class="file-tab">
+                        <i class="fab fa-python"></i>
+                        <span id="currentFileName">main.py</span>
+                    </div>
+                    <div class="editor-stats">
+                        <span id="lineCount">Lines: 1</span>
+                        <span id="charCount">Characters: 0</span>
+                        <span>Python 3.x</span>
+                    </div>
+                </div>
+                <div class="code-editor-container">
+                    <div class="syntax-highlight" id="syntaxHighlight"></div>
+                    <textarea 
+                        class="code-editor" 
+                        id="codeEditor" 
+                        placeholder="# Welcome to PyCode IDE
+# Write your Python code here...
+
+print('Hello, World!')
+print('Welcome to professional Python development!')
+
+# Example: Simple calculator
+def calculator(a, b, operation):
+    if operation == '+':
+        return a + b
+    elif operation == '-':
+        return a - b
+    elif operation == '*':
+        return a * b
+    elif operation == '/':
+        return a / b if b != 0 else 'Error: Division by zero'
+
+# Test the calculator
+result = calculator(10, 5, '+')
+print(f'10 + 5 = {result}')
+
+# Example: List comprehension
+numbers = [1, 2, 3, 4, 5]
+squares = [x**2 for x in numbers]
+print(f'Squares: {squares}')
+"
+                        spellcheck="false"
+                    ></textarea>
+                    <div class="autocomplete-suggestions" id="autocompleteSuggestions"></div>
+                </div>
+            </div>
+
+            <!-- Output Panel -->
+            <div class="output-panel">
+                <div class="output-header">
+                    <div class="output-title">
+                        <i class="fas fa-terminal"></i>
+                        <span>Output</span>
+                    </div>
+                    <button class="btn" onclick="clearOutput()">
+                        <i class="fas fa-trash"></i>
+                        Clear
+                    </button>
+                </div>
+                <div class="output-content" id="outputContent">
+                    Ready to run your Python code...
+                </div>
+            </div>
+        </div>
