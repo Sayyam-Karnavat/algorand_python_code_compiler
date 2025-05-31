@@ -275,3 +275,34 @@ def initialize_session_state():
             st.session_state[key] = value
 
 initialize_session_state()
+
+
+# File operations
+
+def create_project_from_template(template_name):
+    if template_name in PROJECT_TEMPLATES:
+        template_files = PROJECT_TEMPLATES[template_name]
+        for file_path, content in template_files.items():
+            st.session_state.file_system[file_path] = content
+        return True
+    return False
+
+
+def create_file(file_name, language="python"):
+    if file_name and file_name not in st.session_state.file_system:
+        extension = LANGUAGE_CONFIG.get(language, {}).get("extension", ".txt")
+        if not file_name.endswith(extension):
+            file_name += extension
+        st.session_state.file_system[file_name] = ""
+        return file_name
+    return None
+
+def delete_file(file_name):
+    if file_name in st.session_state.file_system:
+        del st.session_state.file_system[file_name]
+        if file_name in st.session_state.open_files:
+            del st.session_state.open_files[file_name]
+        if st.session_state.active_file == file_name:
+            st.session_state.active_file = next(iter(st.session_state.open_files), None)
+        return True
+    return False
