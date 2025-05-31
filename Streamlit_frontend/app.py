@@ -578,20 +578,17 @@ def render_code_editor():
         font_size=st.session_state.settings["font_size"],
         show_gutter=True,
         wrap=True,
-        auto_update=True,
+        auto_update=False,
         keybinding="vscode",
         min_lines=20,
         max_lines=50
     )
     
-    # Auto-save functionality
-    if edited_code != st.session_state.open_files[st.session_state.active_file]:
+    # Manual save - only update when explicitly saved
+    if st.button("💾 Save Current File", key="save_current_file"):
         st.session_state.open_files[st.session_state.active_file] = edited_code
         st.session_state.file_system[st.session_state.active_file] = edited_code
-        # Show auto-save indicator without refreshing the page
-        if st.session_state.settings["auto_save"]:
-            # Use a temporary success message that doesn't trigger rerun
-            st.success("✅ Auto-saved", icon="💾")
+        st.success(f"Saved {st.session_state.active_file}")
     
     # Status bar
     lines = len(edited_code.split('\n')) if edited_code else 0
@@ -692,7 +689,7 @@ def main():
                 st.session_state.settings["font_size"] = new_font_size
         
         with col3:
-            st.session_state.settings["auto_save"] = st.checkbox("Auto Save", st.session_state.settings["auto_save"])
+            st.session_state.settings["show_minimap"] = st.checkbox("Show Minimap", st.session_state.settings.get("show_minimap", True))
 
 if __name__ == "__main__":
     main()
