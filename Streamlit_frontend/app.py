@@ -244,3 +244,34 @@ if __name__ == '__main__':
 }
 
 
+# Initialize enhanced session state
+def initialize_session_state():
+    defaults = {
+        "file_system": {"welcome.py": "# Welcome to Advanced Python IDE\nprint('Hello, World!')\nprint('Start coding!')"},
+        "open_files": {},
+        "active_file": None,
+        "show_create_file": False,
+        "output": "",
+        "terminal_history": [],
+        "find_replace_open": False,
+        "current_language": "python",
+        "project_name": "My Project",
+        "code_snippets": {
+            "for_loop": "for i in range(10):\n    print(i)",
+            "function": "def function_name(param):\n    return param",
+            "class": "class ClassName:\n    def __init__(self):\n        pass",
+            "try_except": "try:\n    # code here\n    pass\nexcept Exception as e:\n    print(f'Error: {e}')"
+        },
+        "settings": {
+            "theme": "dracula",
+            "font_size": 14,
+            "show_minimap": True,
+            "auto_save": True
+        }
+    }
+    
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+initialize_session_state()
