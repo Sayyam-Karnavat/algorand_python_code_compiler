@@ -557,3 +557,32 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
+    </style>
+</head>
+
+<body>
+    <div class="ide-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fab fa-python"></i>
+                <span>PyCode IDE</span>
+            </div>
+            <div class="header-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                    <i class="fas fa-sun" id="themeIcon"></i>
+                </button>
+                <button class="btn" onclick="showNewFileModal()">
+                    <i class="fas fa-file-plus"></i>
+                    New
+                </button>
+                <button class="btn" onclick="saveFile()">
+                    <i class="fas fa-save"></i>
+                    Save
+                </button>
+                <button class="btn btn-success" onclick="runCode()" id="runBtn">
+                    <i class="fas fa-play"></i>
+                    Run Code
+                </button>
+            </div>
+        </header>
