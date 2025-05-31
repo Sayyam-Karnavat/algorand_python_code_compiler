@@ -632,3 +632,55 @@ def render_terminal():
     command = st.text_input("Command:", key="terminal_command", placeholder="Enter command...")
     if st.button("Execute Command") and command:
         execute_terminal_command(command)
+
+
+def execute_current_file():
+    if st.session_state.active_file and st.session_state.active_file.endswith('.py'):
+        code_content = st.session_state.open_files[st.session_state.active_file]
+        with st.spinner("🚀 Running code..."):
+            result = run_python_code(code_content)
+            st.session_state.output = result
+            st.session_state.terminal_history.append(f">>> Running {st.session_state.active_file}")
+            st.session_state.terminal_history.append(result)
+    else:
+        st.warning("Can only execute Python files (.py)")
+
+def execute_terminal_command(command):
+    st.session_state.terminal_history.append(f"$ {command}")
+    
+    # Simple command simulation
+    if command.startswith("echo "):
+        output = command[5:]
+    elif command == "ls":
+        output = "\n".join(st.session_state.file_system.keys())
+    elif command == "pwd":
+        output = f"/projects/{st.session_state.project_name}"
+    elif command == "clear":
+        st.session_state.terminal_history = []
+        st.session_state.output = ""
+        return
+    else:
+        output = f"Command '{command}' not recognized. Available: echo, ls, pwd, clear"
+    
+    st.session_state.terminal_history.append(output)
+    st.rerun()
+
+def format_current_file():
+    # Simple formatting for Python files
+    if st.session_state.active_file and st.session_state.active_file.endswith('.py'):
+        try:
+            import ast
+            code = st.session_state.open_files[st.session_state.active_file]
+            # Basic validation
+            ast.parse(code)
+            st.success("✅ Code is syntactically correct")
+        except SyntaxError as e:
+            st.error(f"❌ Syntax Error: {e}")
+    else:
+        st.info("Formatting available for Python files")
+
+def save_all_files():
+    for file_name, content in st.session_state.open_files.items():
+        st.session_state.file_system[file_name] = content
+    st.success("💾 All files saved successfully")
+
