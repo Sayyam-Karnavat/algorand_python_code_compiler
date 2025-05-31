@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyCode IDE - Professional Python Editor</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #7d8590;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-yellow: #d29922;
+            --accent-purple: #a5a5ff;
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #0a0e13 100%);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .ide-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--accent-blue);
+        }
+
+        .logo i {
+            font-size: 24px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: var(--border-color);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        .btn-primary:hover {
+            background: #4c94e6;
+            border-color: #4c94e6;
+        }
+
+        .btn-success {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .btn-success:hover {
+            background: #2ea043;
+            border-color: #2ea043;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .editor-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+        }
+
+        .editor-header {
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .file-tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-secondary);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .editor-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .code-editor {
+            flex: 1;
+            background: var(--bg-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            border: none;
+            outline: none;
+            padding: 20px;
+            color: var(--text-primary);
+            resize: none;
+            overflow-y: auto;
+            white-space: pre;
+            tab-size: 4;
+        }
+
+        .code-editor::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .code-editor::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        .code-editor::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 6px;
+        }
+
+        .code-editor::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* Output Panel */
+        .output-panel {
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-tertiary);
+        }
+
+        .output-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .output-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .output-content {
+            flex: 1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            padding: 20px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            background: var(--bg-primary);
+        }
+
+        .output-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .output-content::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        .output-content::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .output-success {
+            color: var(--accent-green);
+        }
+
+        .output-error {
+            color: var(--accent-red);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .status-left, .status-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            border-top-color: var(--accent-blue);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .output-panel {
+                width: 100%;
+                height: 300px;
+            }
+            
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .editor-panel {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+
+        /* Syntax Highlighting Simulation */
+        .code-editor {
+            background: linear-gradient(
+                to right,
+                var(--bg-primary) 0%,
+                var(--bg-primary) 100%
+            );
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="ide-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fab fa-python"></i>
+                <span>PyCode IDE</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn" onclick="newFile()">
+                    <i class="fas fa-file-plus"></i>
+                    New
+                </button>
+                <button class="btn" onclick="saveFile()">
+                    <i class="fas fa-save"></i>
+                    Save
+                </button>
+                <button class="btn btn-success" onclick="runCode()" id="runBtn">
+                    <i class="fas fa-play"></i>
+                    Run Code
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Editor Panel -->
+            <div class="editor-panel">
+                <div class="editor-header">
+                    <div class="file-tab">
+                        <i class="fab fa-python"></i>
+                        <span>main.py</span>
+                    </div>
+                    <div class="editor-stats">
+                        <span id="lineCount">Lines: 1</span>
+                        <span id="charCount">Characters: 0</span>
+                        <span>Python 3.x</span>
+                    </div>
+                </div>
+                <textarea 
+                    class="code-editor" 
+                    id="codeEditor" 
+                    placeholder="# Welcome to PyCode IDE
+# Write your Python code here...
+
+print('Hello, World!')
+print('Welcome to professional Python development!')
+
+# Example: Simple calculator
+def calculator(a, b, operation):
+    if operation == '+':
+        return a + b
+    elif operation == '-':
+        return a - b
+    elif operation == '*':
+        return a * b
+    elif operation == '/':
+        return a / b if b != 0 else 'Error: Division by zero'
+
+# Test the calculator
+result = calculator(10, 5, '+')
+print(f'10 + 5 = {result}')
+
+# Example: List comprehension
+numbers = [1, 2, 3, 4, 5]
+squares = [x**2 for x in numbers]
+print(f'Squares: {squares}')
+"
+                    spellcheck="false"
+                ></textarea>
+            </div>
+
+            <!-- Output Panel -->
+            <div class="output-panel">
+                <div class="output-header">
+                    <div class="output-title">
+                        <i class="fas fa-terminal"></i>
+                        <span>Output</span>
+                    </div>
+                    <button class="btn" onclick="clearOutput()">
+                        <i class="fas fa-trash"></i>
+                        Clear
+                    </button>
+                </div>
+                <div class="output-content" id="outputContent">
+                    Ready to run your Python code...
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <div class="status-item">
+                    <i class="fas fa-circle" style="color: var(--accent-green);"></i>
+                    <span>Ready</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-code"></i>
+                    <span>UTF-8</span>
+                </div>
+            </div>
+            <div class="status-right">
+                <div class="status-item">
+                    <i class="fas fa-clock"></i>
+                    <span id="currentTime"></span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-memory"></i>
+                    <span>PyCode v2.0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let isRunning = false;
+        const codeEditor = document.getElementById('codeEditor');
+        const outputContent = document.getElementById('outputContent');
+        const runBtn = document.getElementById('runBtn');
+        const lineCount = document.getElementById('lineCount');
+        const charCount = document.getElementById('charCount');
+
+        // Initialize IDE
+        document.addEventListener('DOMContentLoaded', function() {
+            updateEditorStats();
+            updateTime();
+            setInterval(updateTime, 1000);
+            
+            // Load default code
+            const defaultCode = codeEditor.placeholder;
+            codeEditor.value = defaultCode;
+            codeEditor.placeholder = "";
+            updateEditorStats();
+        });
+
+        // Update editor statistics
+        function updateEditorStats() {
+            const code = codeEditor.value;
+            const lines = code.split('\n').length;
+            const chars = code.length;
+            
+            lineCount.textContent = `Lines: ${lines}`;
+            charCount.textContent = `Characters: ${chars}`;
+        }
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('currentTime').textContent = timeString;
+        }
+
+        // Run Python code
+        async function runCode() {
+            if (isRunning) return;
+            
+            const code = codeEditor.value.trim();
+            if (!code) {
+                showOutput('Error: No code to execute', 'error');
+                return;
+            }
+
+            isRunning = true;
+            runBtn.innerHTML = '<div class="loading"></div> Running...';
+            runBtn.disabled = true;
+
+            showOutput('Executing code...', 'info');
+
+            try {
+                const response = await fetch('/run', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code: code })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showOutput(result.output || 'Code executed successfully (no output)', 'success');
+                } else {
+                    showOutput(result.error || 'An error occurred', 'error');
+                }
+            } catch (error) {
+                showOutput(`Network Error: ${error.message}`, 'error');
+            } finally {
+                resetRunButton();
+            }
+        }
+
+        // Show output in the output panel
+        function showOutput(text, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            let className = '';
+            let icon = '';
+            
+            switch (type) {
+                case 'success':
+                    className = 'output-success';
+                    icon = '✓';
+                    break;
+                case 'error':
+                    className = 'output-error';
+                    icon = '✗';
+                    break;
+                case 'info':
+                    className = '';
+                    icon = 'ℹ';
+                    break;
+            }
+            
+            const output = `[${timestamp}] ${icon} ${text}\n`;
+            outputContent.innerHTML += `<span class="${className}">${output}</span>`;
+            outputContent.scrollTop = outputContent.scrollHeight;
+        }
+
+        // Reset run button
+        function resetRunButton() {
+            isRunning = false;
+            runBtn.innerHTML = '<i class="fas fa-play"></i> Run Code';
+            runBtn.disabled = false;
+        }
+
+        // Clear output
+        function clearOutput() {
+            outputContent.innerHTML = 'Output cleared...\n';
+        }
+
+        // New file
+        function newFile() {
+            if (confirm('Create a new file? Unsaved changes will be lost.')) {
+                codeEditor.value = '# New Python file\n\nprint("Hello, World!")\n';
+                updateEditorStats();
+                showOutput('New file created', 'success');
+            }
+        }
+
+        // Save file
+        function saveFile() {
+            const code = codeEditor.value;
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'main.py';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            showOutput('File saved successfully', 'success');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+Enter or Cmd+Enter to run code
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                runCode();
+            }
+            
+            // Ctrl+S or Cmd+S to save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveFile();
+            }
+            
+            // Ctrl+N or Cmd+N for new file
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                newFile();
+            }
+        });
+
+        // Update stats on code change
+        codeEditor.addEventListener('input', updateEditorStats);
+
+        // Tab support in textarea
+        codeEditor.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                
+                this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 4;
+                updateEditorStats();
+            }
+        });
+    </script>
+</body>
+</html>
