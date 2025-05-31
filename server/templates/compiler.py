@@ -91,6 +91,45 @@ def execute_code(code, code_type='python'):
         })
 
 
+@app.route('/files/save', methods=['POST'])
+def save_file():
+    """Save code to server"""
+    data = request.json
+    filename = data.get('filename', 'untitled.py')
+    content = data.get('content', '')
+    
+    try:
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        with open(filepath, 'w') as f:
+            f.write(content)
+        return jsonify({
+            'success': True,
+            'message': f'File {filename} saved successfully',
+            'filepath': filepath
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+@app.route('/files/load/<filename>')
+def load_file(filename):
+    """Load file from server"""
+    try:
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        with open(filepath, 'r') as f:
+            content = f.read()
+        return jsonify({
+            'success': True,
+            'content': content,
+            'filename': filename
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
 
 @app.route('/run', methods=['POST'])
 def run_code():
