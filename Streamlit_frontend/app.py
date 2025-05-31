@@ -380,3 +380,109 @@ def render_project_header():
         </p>
     </div>
     """, unsafe_allow_html=True)
+
+
+def render_sidebar():
+    with st.sidebar:
+        st.markdown("### 📁 Project Explorer")
+        
+        # Project name
+        new_project_name = st.text_input("Project Name", value=st.session_state.project_name)
+        if new_project_name != st.session_state.project_name:
+            st.session_state.project_name = new_project_name
+        
+        # Quick actions
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("📄 New File"):
+                st.session_state.show_create_file = not st.session_state.show_create_file
+        with col2:
+            if st.button("📁 Template"):
+                st.session_state.show_template_selector = True
+        
+        # File creation form
+        if st.session_state.show_create_file:
+            with st.form("create_file_form"):
+                new_file_name = st.text_input("File name")
+                language = st.selectbox("Language", list(LANGUAGE_CONFIG.keys()))
+                if st.form_submit_button("Create"):
+                    created_file = create_file(new_file_name, language)
+                    if created_file:
+                        st.session_state.open_files[created_file] = ""
+                        st.session_state.active_file = created_file
+                        st.session_state.show_create_file = False
+                        st.success(f"Created {created_file}")
+                        st.rerun()
+                    else:
+                        st.error("File already exists or invalid name")
+        
+        # Template selector
+        if st.session_state.get('show_template_selector', False):
+            template = st.selectbox("Choose Template", list(PROJECT_TEMPLATES.keys()))
+            if st.button("Create from Template"):
+                create_project_from_template(template)
+                st.session_state.show_template_selector = False
+                st.success(f"Created project from {template} template")
+                st.rerun()
+        
+        # File upload
+        uploaded_file = st.file_uploader("Upload File", type=['py', 'js', 'html', 'css', 'json', 'md', 'txt'])
+        if uploaded_file is not None:
+            content = uploaded_file.read().decode('utf-8')
+            st.session_state.file_system[uploaded_file.name] = content
+            st.success(f"Uploaded {uploaded_file.name}")
+        
+        st.markdown("---")
+        
+        # File list
+        files = list(st.session_state.file_system.keys())
+        if files:
+            st.markdown("**Files:**")
+            for file in sorted(files):
+                col1, col2, col3 = st.columns([3, 1, 1])
+                with col1:
+                    # Get file icon based on extension
+                    icon = "📄"
+                    for lang, config in LANGUAGE_CONFIG.items():
+                        if file.endswith(config["extension"]):
+                            icon = config["icon"]
+                            break
+                    
+                    if st.button(f"{icon} {file}", key=f"open_{file}", use_container_width=True):
+                        if file not in st.session_state.open_files:
+                            st.session_state.open_files[file] = st.session_state.file_system[file]
+                        st.session_state.active_file = file
+                        st.rerun()
+                
+                with col2:
+                    if st.button("📥", key=f"download_{file}", help="Download"):
+                        file_content = st.session_state.file_system[file]
+                        b64 = base64.b64encode(file_content.encode()).decode()
+                        href = f'<a href="data:text/plain;base64,{b64}" download="{file}">⬇️</a>'
+                        st.markdown(href, unsafe_allow_html=True)
+                
+                with col3:
+                    if st.button("🗑️", key=f"delete_{file}", help="Delete"):
+                        delete_file(file)
+                        st.rerun()
+        
+        st.markdown("---")
+        
+        # Export project
+        if st.button("📦 Export Project"):
+            zip_buffer = export_project_as_zip()
+            st.download_button(
+                label="Download ZIP",
+                data=zip_buffer.getvalue(),
+                file_name=f"{st.session_state.project_name}.zip",
+                mime="application/zip"
+            )
+        
+        # Code snippets
+        st.markdown("### 🧩 Code Snippets")
+        snippet = st.selectbox("Insert snippet", list(st.session_state.code_snippets.keys()))
+        if st.button("Insert Snippet"):
+            if st.session_state.active_file:
+                current_content = st.session_state.open_files.get(st.session_state.active_file, "")
+                st.session_state.open_files[st.session_state.active_file] = current_content + "\n" + st.session_state.code_snippets[snippet]
+                st.rerun()
