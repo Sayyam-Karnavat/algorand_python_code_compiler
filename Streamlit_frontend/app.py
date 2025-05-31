@@ -684,3 +684,31 @@ def save_all_files():
         st.session_state.file_system[file_name] = content
     st.success("💾 All files saved successfully")
 
+
+# Main application
+def main():
+    render_project_header()
+    
+    # Create layout
+    render_sidebar()
+    render_main_editor()
+    
+    # Settings in expander at bottom
+    with st.expander("⚙️ Settings"):
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            new_theme = st.selectbox("Theme", ["dracula", "monokai", "github", "tomorrow"], 
+                                   index=["dracula", "monokai", "github", "tomorrow"].index(st.session_state.settings["theme"]))
+            if new_theme != st.session_state.settings["theme"]:
+                st.session_state.settings["theme"] = new_theme
+        
+        with col2:
+            new_font_size = st.slider("Font Size", 10, 24, st.session_state.settings["font_size"])
+            if new_font_size != st.session_state.settings["font_size"]:
+                st.session_state.settings["font_size"] = new_font_size
+        
+        with col3:
+            st.session_state.settings["auto_save"] = st.checkbox("Auto Save", st.session_state.settings["auto_save"])
+
+if __name__ == "__main__":
+    main()
