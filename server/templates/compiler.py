@@ -155,6 +155,33 @@ def list_files():
             'error': str(e)
         })
 
+@app.route('/files/delete/<filename>', methods=['DELETE'])
+def delete_file(filename):
+    """Delete file from server"""
+    try:
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        os.remove(filepath)
+        return jsonify({
+            'success': True,
+            'message': f'File {filename} deleted successfully'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+@app.route('/files/download/<filename>')
+def download_file(filename):
+    """Download file"""
+    try:
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        return send_file(filepath, as_attachment=True)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
 
 @app.route('/run', methods=['POST'])
 def run_code():
