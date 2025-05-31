@@ -681,3 +681,25 @@ print(f'Squares: {squares}')
             </div>
         </div>
     </div>
+<!-- New File Modal -->
+    <div class="modal" id="newFileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-file-plus"></i>
+                <h3>Create New File</h3>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="fileName">File Name:</label>
+                    <input type="text" id="fileName" placeholder="Enter file name (without .py extension)" autocomplete="off">
+                </div>
+                <p style="font-size: 12px; color: var(--text-secondary);">
+                    The .py extension will be added automatically
+                </p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="hideNewFileModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createNewFile()">Create</button>
+            </div>
+        </div>
+    </div>
