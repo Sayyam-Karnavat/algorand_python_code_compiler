@@ -616,3 +616,19 @@ def render_code_editor():
     ''', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
+
+
+def render_terminal():
+    st.markdown("### 💻 Terminal")
+    
+    # Terminal output
+    terminal_content = st.session_state.output
+    if st.session_state.terminal_history:
+        terminal_content = "\n".join(st.session_state.terminal_history) + "\n" + terminal_content
+    
+    st.markdown(f'<div class="terminal">{terminal_content}</div>', unsafe_allow_html=True)
+    
+    # Command input
+    command = st.text_input("Command:", key="terminal_command", placeholder="Enter command...")
+    if st.button("Execute Command") and command:
+        execute_terminal_command(command)
