@@ -6,6 +6,18 @@ import os
 
 app = Flask(__name__)
 
+
+# Configuration
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file upload
+UPLOAD_FOLDER = 'uploads'
+TEMPLATES_FOLDER = 'code_templates'
+
+# Ensure directories exist
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(TEMPLATES_FOLDER, exist_ok=True)
+
+
+
 @app.route('/')
 def ide():
     return render_template('ide.html')
