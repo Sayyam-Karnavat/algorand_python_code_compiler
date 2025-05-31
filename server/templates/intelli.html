@@ -488,8 +488,7 @@
             animation: spin 1s ease-in-out infinite;
         }
 
-
-     @keyframes spin {
+        @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
@@ -556,10 +555,8 @@
             from { transform: translateY(10px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
-
     </style>
 </head>
-
 <body>
     <div class="ide-container">
         <!-- Header -->
@@ -586,7 +583,8 @@
                 </button>
             </div>
         </header>
-<!-- Main Content -->
+
+        <!-- Main Content -->
         <div class="main-content">
             <!-- Editor Panel -->
             <div class="editor-panel">
@@ -656,8 +654,7 @@ print(f'Squares: {squares}')
             </div>
         </div>
 
-
-<!-- Status Bar -->
+        <!-- Status Bar -->
         <div class="status-bar">
             <div class="status-left">
                 <div class="status-item">
@@ -681,7 +678,8 @@ print(f'Squares: {squares}')
             </div>
         </div>
     </div>
-<!-- New File Modal -->
+
+    <!-- New File Modal -->
     <div class="modal" id="newFileModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -703,3 +701,156 @@ print(f'Squares: {squares}')
             </div>
         </div>
     </div>
+
+    <script>
+        // Global variables
+        let isRunning = false;
+        let currentTheme = 'light';
+        let currentFileName = 'main.py';
+        let selectedSuggestionIndex = -1;
+        
+        const codeEditor = document.getElementById('codeEditor');
+        const syntaxHighlight = document.getElementById('syntaxHighlight');
+        const outputContent = document.getElementById('outputContent');
+        const runBtn = document.getElementById('runBtn');
+        const lineCount = document.getElementById('lineCount');
+        const charCount = document.getElementById('charCount');
+        const autocompleteSuggestions = document.getElementById('autocompleteSuggestions');
+
+        // Python keywords and built-ins for IntelliSense
+        const pythonKeywords = [
+            // Keywords
+            { text: 'and', type: 'keyword', icon: 'K' },
+            { text: 'as', type: 'keyword', icon: 'K' },
+            { text: 'assert', type: 'keyword', icon: 'K' },
+            { text: 'break', type: 'keyword', icon: 'K' },
+            { text: 'class', type: 'keyword', icon: 'K' },
+            { text: 'continue', type: 'keyword', icon: 'K' },
+            { text: 'def', type: 'keyword', icon: 'K' },
+            { text: 'del', type: 'keyword', icon: 'K' },
+            { text: 'elif', type: 'keyword', icon: 'K' },
+            { text: 'else', type: 'keyword', icon: 'K' },
+            { text: 'except', type: 'keyword', icon: 'K' },
+            { text: 'finally', type: 'keyword', icon: 'K' },
+            { text: 'for', type: 'keyword', icon: 'K' },
+            { text: 'from', type: 'keyword', icon: 'K' },
+            { text: 'global', type: 'keyword', icon: 'K' },
+            { text: 'if', type: 'keyword', icon: 'K' },
+            { text: 'import', type: 'keyword', icon: 'K' },
+            { text: 'in', type: 'keyword', icon: 'K' },
+            { text: 'is', type: 'keyword', icon: 'K' },
+            { text: 'lambda', type: 'keyword', icon: 'K' },
+            { text: 'not', type: 'keyword', icon: 'K' },
+            { text: 'or', type: 'keyword', icon: 'K' },
+            { text: 'pass', type: 'keyword', icon: 'K' },
+            { text: 'raise', type: 'keyword', icon: 'K' },
+            { text: 'return', type: 'keyword', icon: 'K' },
+            { text: 'try', type: 'keyword', icon: 'K' },
+            { text: 'while', type: 'keyword', icon: 'K' },
+            { text: 'with', type: 'keyword', icon: 'K' },
+            { text: 'yield', type: 'keyword', icon: 'K' },
+            
+            // Built-in functions
+            { text: 'print', type: 'function', icon: 'F' },
+            { text: 'input', type: 'function', icon: 'F' },
+            { text: 'len', type: 'function', icon: 'F' },
+            { text: 'range', type: 'function', icon: 'F' },
+            { text: 'str', type: 'function', icon: 'F' },
+            { text: 'int', type: 'function', icon: 'F' },
+            { text: 'float', type: 'function', icon: 'F' },
+            { text: 'bool', type: 'function', icon: 'F' },
+            { text: 'list', type: 'function', icon: 'F' },
+            { text: 'dict', type: 'function', icon: 'F' },
+            { text: 'tuple', type: 'function', icon: 'F' },
+            { text: 'set', type: 'function', icon: 'F' },
+            { text: 'enumerate', type: 'function', icon: 'F' },
+            { text: 'zip', type: 'function', icon: 'F' },
+            { text: 'map', type: 'function', icon: 'F' },
+            { text: 'filter', type: 'function', icon: 'F' },
+            { text: 'sorted', type: 'function', icon: 'F' },
+            { text: 'reversed', type: 'function', icon: 'F' },
+            { text: 'sum', type: 'function', icon: 'F' },
+            { text: 'min', type: 'function', icon: 'F' },
+            { text: 'max', type: 'function', icon: 'F' },
+            { text: 'abs', type: 'function', icon: 'F' },
+            { text: 'round', type: 'function', icon: 'F' },
+            { text: 'open', type: 'function', icon: 'F' },
+            
+            // Constants
+            { text: 'True', type: 'constant', icon: 'C' },
+            { text: 'False', type: 'constant', icon: 'C' },
+            { text: 'None', type: 'constant', icon: 'C' },
+        ];
+
+        // Initialize IDE
+        document.addEventListener('DOMContentLoaded', function() {
+            updateEditorStats();
+            updateTime();
+            setInterval(updateTime, 1000);
+            
+            // Load default code
+            const defaultCode = codeEditor.placeholder;
+            codeEditor.value = defaultCode;
+            codeEditor.placeholder = "";
+            updateEditorStats();
+            updateSyntaxHighlighting();
+            
+            // Load theme preference
+            const savedTheme = localStorage.getItem('pycode-theme') || 'light';
+            setTheme(savedTheme);
+        });
+
+        // Theme Management
+        function toggleTheme() {
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (theme === 'dark') {
+                themeIcon.className = 'fas fa-moon';
+            } else {
+                themeIcon.className = 'fas fa-sun';
+            }
+            
+            localStorage.setItem('pycode-theme', theme);
+            updateSyntaxHighlighting();
+        }
+
+        // Syntax Highlighting
+        function updateSyntaxHighlighting() {
+            const code = codeEditor.value;
+            let highlightedCode = code;
+            
+            // Escape HTML
+            highlightedCode = highlightedCode
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            
+            // Highlight keywords
+            const keywordPattern = /\b(and|as|assert|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|not|or|pass|raise|return|try|while|with|yield)\b/g;
+            highlightedCode = highlightedCode.replace(keywordPattern, '<span class="keyword">$1</span>');
+            
+            // Highlight strings
+            const stringPattern = /(['"`])(?:(?!\1)[\\].|(?!\1).)*?\1/g;
+            highlightedCode = highlightedCode.replace(stringPattern, '<span class="string">$&</span>');
+            
+            // Highlight comments
+            const commentPattern = /#.*$/gm;
+            highlightedCode = highlightedCode.replace(commentPattern, '<span class="comment">$&</span>');
+            
+            // Highlight numbers
+            const numberPattern = /\b\d+\.?\d*\b/g;
+            highlightedCode = highlightedCode.replace(numberPattern, '<span class="number">$&</span>');
+            
+            // Highlight function definitions
+            const functionPattern = /\bdef\s+(\w+)/g;
+            highlightedCode = highlightedCode.replace(functionPattern, '<span class="keyword">def</span> <span class="function">$1</span>');
+            
+            syntaxHighlight.innerHTML = highlightedCode;
+        }
