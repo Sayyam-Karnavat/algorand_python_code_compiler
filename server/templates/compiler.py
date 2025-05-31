@@ -183,6 +183,25 @@ def download_file(filename):
             'error': str(e)
         })
 
+@app.route('/packages/install', methods=['POST'])
+def install_package():
+    """Install Python package (for blockchain libraries)"""
+    package_name = request.json.get('package', '')
+    
+    try:
+        result = subprocess.run([sys.executable, '-m', 'pip', 'install', package_name], 
+                              capture_output=True, text=True, timeout=300)
+        return jsonify({
+            'success': result.returncode == 0,
+            'output': result.stdout,
+            'error': result.stderr
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
 @app.route('/run', methods=['POST'])
 def run_code():
     code = request.json.get('code', '')
