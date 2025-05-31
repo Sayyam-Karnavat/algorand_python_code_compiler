@@ -131,6 +131,31 @@ def load_file(filename):
             'error': str(e)
         })
 
+@app.route('/files/list')
+def list_files():
+    """List all saved files"""
+    try:
+        files = []
+        for filename in os.listdir(UPLOAD_FOLDER):
+            if filename.endswith('.py'):
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                stat = os.stat(filepath)
+                files.append({
+                    'name': filename,
+                    'size': stat.st_size,
+                    'modified': datetime.fromtimestamp(stat.st_mtime).isoformat()
+                })
+        return jsonify({
+            'success': True,
+            'files': files
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+
 @app.route('/run', methods=['POST'])
 def run_code():
     code = request.json.get('code', '')
