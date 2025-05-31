@@ -571,4 +571,48 @@ def render_find_replace():
                     st.success("Replacement completed")
 
     
+def render_code_editor():
+    st.markdown('<div class="editor-container">', unsafe_allow_html=True)
     
+    # Determine language mode
+    current_file = st.session_state.active_file
+    ace_mode = "python"
+    for lang, config in LANGUAGE_CONFIG.items():
+        if current_file.endswith(config["extension"]):
+            ace_mode = config["ace_mode"]
+            break
+    
+    # Code editor
+    edited_code = st_ace(
+        value=st.session_state.open_files[st.session_state.active_file],
+        language=ace_mode,
+        theme=st.session_state.settings["theme"],
+        height=500,
+        font_size=st.session_state.settings["font_size"],
+        show_gutter=True,
+        wrap=True,
+        auto_update=True,
+        keybinding="vscode",
+        min_lines=20,
+        max_lines=50,
+        show_printmargin=True,
+        annotations=None
+    )
+    
+    # Auto-save functionality
+    if edited_code != st.session_state.open_files[st.session_state.active_file]:
+        st.session_state.open_files[st.session_state.active_file] = edited_code
+        st.session_state.file_system[st.session_state.active_file] = edited_code
+        if st.session_state.settings["auto_save"]:
+            st.markdown('<div class="success-message">✅ Auto-saved</div>', unsafe_allow_html=True)
+    
+    # Status bar
+    lines = len(edited_code.split('\n')) if edited_code else 0
+    chars = len(edited_code) if edited_code else 0
+    st.markdown(f'''
+    <div class="status-bar">
+        📄 {st.session_state.active_file} | Lines: {lines} | Characters: {chars} | Language: {ace_mode.title()}
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
