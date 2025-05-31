@@ -36,7 +36,62 @@ def run_blockchain_code():
     return execute_code(code, 'blockchain')
 
 
+def execute_code(code, code_type='python'):
+    """Common code execution function"""
+    if not code.strip():
+        return jsonify({
+            'output': '',
+            'error': 'No code provided',
+            'success': False
+        })
     
+    try:
+        # Create temporary file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+            f.write(code)
+            temp_file = f.name
+        
+        # Set environment variables for blockchain libraries
+        env = os.environ.copy()
+        if code_type == 'blockchain':
+            env['PYTHONPATH'] = env.get('PYTHONPATH', '') + ':./blockchain_libs'
+        
+        # Execute with timeout
+        result = subprocess.run([sys.executable, temp_file], 
+                              capture_output=True, 
+                              text=True, 
+                              timeout=30,  # Increased timeout for blockchain
+                              env=env)
+        
+        # Clean up
+        os.unlink(temp_file)
+        
+        return jsonify({
+            'output': result.stdout,
+            'error': result.stderr,
+            'success': result.returncode == 0,
+            'execution_time': datetime.now().isoformat()
+        })
+        
+    except subprocess.TimeoutExpired:
+        if 'temp_file' in locals():
+            os.unlink(temp_file)
+        return jsonify({
+            'output': '',
+            'error': 'Code execution timed out (30 seconds limit)',
+            'success': False
+        })
+    except Exception as e:
+        if 'temp_file' in locals():
+            os.unlink(temp_file)
+        return jsonify({
+            'output': '',
+            'error': f'Execution error: {str(e)}',
+            'success': False
+        })
+
+
+
 @app.route('/run', methods=['POST'])
 def run_code():
     code = request.json.get('code', '')
