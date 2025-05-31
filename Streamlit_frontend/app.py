@@ -1,3 +1,6 @@
+import streamlit as st
+from streamlit_ace import st_ace
+import uuid
 import io
 import base64
 import sys
@@ -7,8 +10,6 @@ import tempfile
 import os
 from datetime import datetime
 import re
-import streamlit as st
-
 
 # Set page config as the first Streamlit command
 st.set_page_config(
@@ -243,7 +244,6 @@ if __name__ == '__main__':
     }
 }
 
-
 # Initialize enhanced session state
 def initialize_session_state():
     defaults = {
@@ -276,18 +276,7 @@ def initialize_session_state():
 
 initialize_session_state()
 
-
-# File operations
-
-def create_project_from_template(template_name):
-    if template_name in PROJECT_TEMPLATES:
-        template_files = PROJECT_TEMPLATES[template_name]
-        for file_path, content in template_files.items():
-            st.session_state.file_system[file_path] = content
-        return True
-    return False
-
-
+# Enhanced file operations
 def create_file(file_name, language="python"):
     if file_name and file_name not in st.session_state.file_system:
         extension = LANGUAGE_CONFIG.get(language, {}).get("extension", ".txt")
@@ -307,6 +296,14 @@ def delete_file(file_name):
         return True
     return False
 
+def create_project_from_template(template_name):
+    if template_name in PROJECT_TEMPLATES:
+        template_files = PROJECT_TEMPLATES[template_name]
+        for file_path, content in template_files.items():
+            st.session_state.file_system[file_path] = content
+        return True
+    return False
+
 def export_project_as_zip():
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
@@ -314,7 +311,6 @@ def export_project_as_zip():
             zip_file.writestr(file_name, content)
     zip_buffer.seek(0)
     return zip_buffer
-
 
 # Enhanced code execution
 def run_python_code(code):
@@ -356,8 +352,6 @@ def run_python_code(code):
         sys.stderr = old_stderr
         return f"Runtime Error: {str(e)}"
 
-
-
 # Find and replace functionality
 def find_and_replace(content, find_text, replace_text, case_sensitive=False):
     if not case_sensitive:
@@ -365,8 +359,6 @@ def find_and_replace(content, find_text, replace_text, case_sensitive=False):
         return pattern.sub(replace_text, content)
     else:
         return content.replace(find_text, replace_text)
-    
-
 
 # UI Components
 def render_project_header():
@@ -380,7 +372,6 @@ def render_project_header():
         </p>
     </div>
     """, unsafe_allow_html=True)
-
 
 def render_sidebar():
     with st.sidebar:
@@ -487,8 +478,6 @@ def render_sidebar():
                 st.session_state.open_files[st.session_state.active_file] = current_content + "\n" + st.session_state.code_snippets[snippet]
                 st.rerun()
 
-
-
 def render_main_editor():
     if not st.session_state.open_files:
         st.info("🚀 Welcome to Advanced Python IDE! Create or open a file to start coding.")
@@ -522,7 +511,6 @@ def render_main_editor():
         
         # Terminal
         render_terminal()
-
 
 def render_action_bar():
     st.markdown('<div class="action-bar">', unsafe_allow_html=True)
@@ -570,7 +558,6 @@ def render_find_replace():
                     st.session_state.open_files[st.session_state.active_file] = new_content
                     st.success("Replacement completed")
 
-    
 def render_code_editor():
     st.markdown('<div class="editor-container">', unsafe_allow_html=True)
     
@@ -594,9 +581,7 @@ def render_code_editor():
         auto_update=True,
         keybinding="vscode",
         min_lines=20,
-        max_lines=50,
-        show_printmargin=True,
-        annotations=None
+        max_lines=50
     )
     
     # Auto-save functionality
@@ -617,7 +602,6 @@ def render_code_editor():
     
     st.markdown('</div>', unsafe_allow_html=True)
 
-
 def render_terminal():
     st.markdown("### 💻 Terminal")
     
@@ -632,7 +616,6 @@ def render_terminal():
     command = st.text_input("Command:", key="terminal_command", placeholder="Enter command...")
     if st.button("Execute Command") and command:
         execute_terminal_command(command)
-
 
 def execute_current_file():
     if st.session_state.active_file and st.session_state.active_file.endswith('.py'):
@@ -683,7 +666,6 @@ def save_all_files():
     for file_name, content in st.session_state.open_files.items():
         st.session_state.file_system[file_name] = content
     st.success("💾 All files saved successfully")
-
 
 # Main application
 def main():
