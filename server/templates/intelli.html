@@ -487,3 +487,73 @@
             border-top-color: var(--accent-blue);
             animation: spin 1s ease-in-out infinite;
         }
+
+
+     @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Dark Theme Styles */
+        [data-theme="dark"] {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #7d8590;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-yellow: #d29922;
+            --accent-purple: #a5a5ff;
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --hover-bg: #30363d;
+            
+            --syntax-keyword: #ff7b72;
+            --syntax-string: #a5d6ff;
+            --syntax-comment: #8b949e;
+            --syntax-number: #79c0ff;
+            --syntax-function: #d2a8ff;
+            --syntax-operator: #e6edf3;
+        }
+
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #0a0e13 100%);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .output-panel {
+                width: 100%;
+                height: 300px;
+            }
+            
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .editor-panel {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
