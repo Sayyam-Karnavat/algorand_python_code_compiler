@@ -588,8 +588,10 @@ def render_code_editor():
     if edited_code != st.session_state.open_files[st.session_state.active_file]:
         st.session_state.open_files[st.session_state.active_file] = edited_code
         st.session_state.file_system[st.session_state.active_file] = edited_code
+        # Show auto-save indicator without refreshing the page
         if st.session_state.settings["auto_save"]:
-            st.markdown('<div class="success-message">✅ Auto-saved</div>', unsafe_allow_html=True)
+            # Use a temporary success message that doesn't trigger rerun
+            st.success("✅ Auto-saved", icon="💾")
     
     # Status bar
     lines = len(edited_code.split('\n')) if edited_code else 0
